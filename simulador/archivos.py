@@ -44,9 +44,10 @@ class GestorArchivos:
             raise ValueError("La raíz administrada no puede ser un enlace o redirección.")
 
     def create_file(self, nombre: str) -> Resultado:
-        ruta = self._ruta_por_nombre(nombre)
-        if ruta is None:
-            return error("FILE_001")
+        ruta, fallo = self._preparar_ruta(nombre)
+        if fallo is not None:
+            return fallo
+        assert ruta is not None
         if ruta.exists() or ruta.is_symlink():
             return error("FILE_001" if self._es_redireccion(ruta) else "FILE_002")
         try:
@@ -60,9 +61,10 @@ class GestorArchivos:
                          {"nombre": nombre, "estado": "Cerrado"})
 
     def open_file(self, nombre: str, modo: str) -> Resultado:
-        ruta = self._ruta_por_nombre(nombre)
-        if ruta is None:
-            return error("FILE_001")
+        ruta, fallo = self._preparar_ruta(nombre)
+        if fallo is not None:
+            return fallo
+        assert ruta is not None
         # Precedencia del diseño §10.7: existencia, modo y apertura activa.
         if not ruta.exists():
             return error("FILE_003")
@@ -90,7 +92,7 @@ class GestorArchivos:
             return validacion
         try:
             contenido = apertura.archivo.ruta.read_text(encoding="utf-8")
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             return self._fallo_fisico("leer", exc)
         return Resultado("EXITO", "FILE-03", "Archivo leído correctamente.",
                          {"contenido": contenido})
@@ -124,7 +126,7 @@ class GestorArchivos:
                 os.fsync(archivo.fileno())
             os.replace(temporal, apertura.archivo.ruta)
             temporal = None
-        except OSError as exc:
+        except (OSError, UnicodeError) as exc:
             if descriptor_fisico is not None:
                 os.close(descriptor_fisico)
             limpieza = self._limpiar_temporal(temporal)
@@ -136,17 +138,17 @@ class GestorArchivos:
         apertura = self._obtener_apertura(descriptor)
         if apertura is None:
             return error("FILE_006")
-        validacion = self._validar_destino_descriptor(apertura)
-        if validacion is not None:
-            return validacion
+        # Cerrar solo retira la apertura simulada. Debe poder liberar un descriptor
+        # aunque otro programa haya borrado el archivo físico durante la sesión.
         del self._archivos_abiertos[descriptor]
         return Resultado("EXITO", "FILE-05", "Archivo cerrado correctamente.",
                          {"descriptor": descriptor, "estado": "Cerrado"})
 
     def delete_file(self, nombre: str) -> Resultado:
-        ruta = self._ruta_por_nombre(nombre)
-        if ruta is None:
-            return error("FILE_001")
+        ruta, fallo = self._preparar_ruta(nombre)
+        if fallo is not None:
+            return fallo
+        assert ruta is not None
         if not ruta.exists():
             return error("FILE_003")
         if self._es_redireccion(ruta) or not ruta.is_file():
@@ -161,8 +163,9 @@ class GestorArchivos:
                          {"nombre": nombre})
 
     def list_files(self) -> Resultado:
-        if not self._raiz_valida():
-            return error("FILE_001")
+        fallo_raiz = self._validar_raiz()
+        if fallo_raiz is not None:
+            return fallo_raiz
         archivos: list[dict[str, object]] = []
         try:
             entradas = sorted(self._raiz.iterdir(), key=lambda p: p.name.casefold())
@@ -183,23 +186,26 @@ class GestorArchivos:
         return Resultado("EXITO", "FILE-07", f"Archivos encontrados: {len(archivos)}.",
                          {"archivos": archivos})
 
-    def _ruta_por_nombre(self, nombre: object) -> Path | None:
-        if not self._nombre_valido(nombre) or not self._raiz_valida():
-            return None
+    def _preparar_ruta(self, nombre: object) -> tuple[Path | None, Resultado | None]:
+        if not self._nombre_valido(nombre):
+            return None, error("FILE_001")
+        fallo_raiz = self._validar_raiz()
+        if fallo_raiz is not None:
+            return None, fallo_raiz
         ruta = self._raiz / nombre
         try:
             if ruta.parent.resolve(strict=True) != self._raiz:
-                return None
-        except OSError:
-            return None
-        return ruta
+                return None, error("FILE_001")
+        except OSError as exc:
+            return None, self._fallo_fisico("acceder_raiz", exc)
+        return ruta, None
 
     def _nombre_valido(self, nombre: object) -> bool:
         if not isinstance(nombre, str) or not nombre.strip() or nombre in {".", ".."}:
             return False
-        if nombre.startswith(self.PREFIJO_TEMPORAL) or "\x00" in nombre:
+        if nombre.startswith(self.PREFIJO_TEMPORAL) or any(ord(c) < 32 for c in nombre):
             return False
-        if "/" in nombre or "\\" in nombre or ":" in nombre:
+        if any(c in nombre for c in '<>:"/\\|?*'):
             return False
         if nombre.endswith((" ", ".")) or Path(nombre).is_absolute():
             return False
@@ -209,13 +215,19 @@ class GestorArchivos:
         base = nombre.split(".", 1)[0].upper()
         return base not in self.DISPOSITIVOS_WINDOWS
 
-    def _raiz_valida(self) -> bool:
+    def _validar_raiz(self) -> Resultado | None:
         try:
-            return (self._raiz.exists() and self._raiz.is_dir()
-                    and not self._es_redireccion(self._raiz_solicitada)
-                    and self._raiz_solicitada.resolve(strict=True) == self._raiz)
-        except OSError:
-            return False
+            self._raiz_solicitada.lstat()
+            if self._es_redireccion(self._raiz_solicitada):
+                return error("FILE_001")
+            if not self._raiz_solicitada.is_dir():
+                return self._fallo_fisico(
+                    "acceder_raiz", NotADirectoryError("La raíz administrada dejó de ser un directorio."))
+            if self._raiz_solicitada.resolve(strict=True) != self._raiz:
+                return error("FILE_001")
+        except OSError as exc:
+            return self._fallo_fisico("acceder_raiz", exc)
+        return None
 
     @staticmethod
     def _es_redireccion(ruta: Path) -> bool:
@@ -243,7 +255,10 @@ class GestorArchivos:
 
     def _validar_destino_descriptor(self, apertura: ArchivoAbierto) -> Resultado | None:
         ruta = apertura.archivo.ruta
-        if not self._raiz_valida() or ruta.parent != self._raiz or self._es_redireccion(ruta):
+        fallo_raiz = self._validar_raiz()
+        if fallo_raiz is not None:
+            return fallo_raiz
+        if ruta.parent != self._raiz or self._es_redireccion(ruta):
             return error("FILE_001")
         if not ruta.exists() or not ruta.is_file():
             return self._fallo_fisico("acceder", FileNotFoundError("El archivo abierto ya no está disponible."))
@@ -251,16 +266,18 @@ class GestorArchivos:
 
     @staticmethod
     def _limpiar_temporal(temporal: Path | None) -> str | None:
-        if temporal is None or not temporal.exists():
+        if temporal is None:
             return None
         try:
-            temporal.unlink()
+            if temporal.exists():
+                temporal.unlink()
         except OSError as exc:
             return f"{type(exc).__name__}: {exc}"
         return None
 
     @staticmethod
-    def _fallo_fisico(operacion: str, exc: OSError, limpieza: str | None = None) -> Resultado:
+    def _fallo_fisico(operacion: str, exc: Exception,
+                      limpieza: str | None = None) -> Resultado:
         datos: dict[str, object] = {
             "operacion": operacion,
             "tipo": type(exc).__name__,

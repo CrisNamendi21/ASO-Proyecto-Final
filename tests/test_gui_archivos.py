@@ -15,11 +15,18 @@ class PantallaArchivos(unittest.TestCase):
             raiz = tk.Tk()
         except tk.TclError as exc:
             self.skipTest(f"Tk no está disponible en este entorno: {exc}")
-        raiz.withdraw()
         try:
             with tempfile.TemporaryDirectory() as temporal:
                 app = crear_aplicacion(Path(temporal) / "archivos")
                 ventana = Ventana(raiz, app)
+                raiz.geometry("850x700")
+                raiz.update_idletasks()
+                for nombre in ("Procesos", "Archivos", "Bitácora", "Inicio"):
+                    ventana.mostrar(nombre)
+                    raiz.update_idletasks()
+                    vista = ventana.vistas[nombre]
+                    self.assertGreaterEqual(vista.winfo_width(), vista.winfo_reqwidth())
+                    self.assertGreaterEqual(vista.winfo_height(), vista.winfo_reqheight())
                 ventana.mostrar("Archivos")
                 ventana.nombre_archivo.set("gui.txt")
                 ventana.crear_archivo()
