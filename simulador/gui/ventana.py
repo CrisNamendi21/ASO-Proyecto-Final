@@ -12,7 +12,7 @@ class Ventana:
     def __init__(self, raiz: tk.Tk, aplicacion: AplicacionUsuario) -> None:
         self.raiz = raiz
         self.aplicacion = aplicacion
-        raiz.title("Simulador de System Calls — Incremento 3")
+        raiz.title("Simulador de System Calls — Incremento 4")
         raiz.geometry("1050x780")
         raiz.minsize(850, 700)
         raiz.columnconfigure(1, weight=1)
@@ -42,15 +42,22 @@ class Ventana:
         self._crear_archivos()
         self._crear_bitacora()
 
-        panel_resultado = ttk.LabelFrame(raiz, text="Resultado de la última llamada", padding=8)
-        panel_resultado.grid(row=2, column=0, columnspan=2, sticky="ew", padx=12, pady=5)
-        self.resultado = self._texto_lectura(panel_resultado, 5)
+        panel_inferior = ttk.Frame(raiz, padding=(12, 5, 12, 12))
+        panel_inferior.grid(row=2, column=0, columnspan=2, sticky="nsew")
+        panel_inferior.columnconfigure(0, weight=2)
+        panel_inferior.columnconfigure(1, weight=3)
+
+        panel_resultado = ttk.LabelFrame(
+            panel_inferior, text="Resultado de la última llamada", padding=8)
+        panel_resultado.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        self.resultado = self._texto_lectura(panel_resultado, 7)
         self._poner_texto(self.resultado, "Todavía no se ha enviado ninguna solicitud.")
 
         panel_recorrido = ttk.LabelFrame(
-            raiz, text="Recorrido conceptual — no cambia privilegios del procesador", padding=8)
-        panel_recorrido.grid(row=3, column=0, columnspan=2, sticky="ew", padx=12, pady=(5, 12))
-        self.recorrido = self._texto_lectura(panel_recorrido, 12)
+            panel_inferior,
+            text="Recorrido conceptual — no cambia privilegios del procesador", padding=8)
+        panel_recorrido.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
+        self.recorrido = self._texto_lectura(panel_recorrido, 7)
         self._poner_texto(self.recorrido, "El recorrido aparecerá después de una llamada.")
         self.mostrar("Inicio")
 

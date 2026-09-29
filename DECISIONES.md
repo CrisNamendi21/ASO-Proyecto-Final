@@ -35,6 +35,7 @@ especificación académica ni sustituye los documentos originales o `AGENTS.md`.
 | DEC-007 | Estructura exacta de parámetros y transporte de solicitudes | Concreción de implementación documentada en el incremento 1 | Implementada y probada; sin aprobación individual registrada |
 | DEC-008 | Incluir estado anterior en la finalización | Aprobación explícita durante el incremento 2 | Implementada y probada |
 | DEC-009 | Reglas concretas para nombres físicos y temporales internos | Decisión rutinaria compatible con el confinamiento | Implementada y probada |
+| DEC-010 | Cerrar un descriptor aunque el archivo físico haya desaparecido | Decisión rutinaria compatible con FILE-05 | Implementada y probada |
 
 ## DEC-001 — Ejecutando sin activación automática
 
@@ -107,7 +108,9 @@ y `codigo_host`; si falla la limpieza protegida se añade
 
 **Verificación:** [test_archivos.py](tests/test_archivos.py) simula permisos denegados
 y falta de espacio dentro de directorios temporales; comprueba `FILE_009`, evento
-final, ausencia de falso éxito y conservación del archivo original.
+final, ausencia de falso éxito y conservación del archivo original. El incremento 4
+añade raíz eliminada y errores de codificación de lectura/escritura, que tampoco
+escapan como excepciones sin manejar.
 
 ## DEC-003 — Proteger la escritura con un temporal controlado
 
@@ -255,7 +258,8 @@ Esto no está especificado en el documento; lo propongo como decisión de implem
 además de las prohibiciones expresas, se rechazan nombres de solo espacios, nombres
 terminados en punto o espacio y el prefijo interno `.__simulador_tmp_`. No se recortan,
 normalizan ni convierten nombres válidos. El gestor también rechaza `:` para impedir
-flujos alternativos y los nombres de dispositivo de Windows, incluso con extensión.
+flujos alternativos, caracteres reservados de Windows, controles ASCII y nombres de
+dispositivo de Windows, incluso con extensión.
 Las entradas detectadas como enlaces físicos con más de un nombre también se tratan
 como redirecciones para no exponer un archivo externo mediante un hard link.
 
@@ -270,6 +274,30 @@ requisito académico adicional.
 **Estado y evidencia:** implementada en [archivos.py](simulador/archivos.py) y
 comprobada por `test_nombres_no_son_rutas_y_no_afectan_archivos_externos` en
 [test_archivos.py](tests/test_archivos.py).
+
+## DEC-010 — Cerrar un descriptor aunque el archivo físico haya desaparecido
+
+**Fuente:** diseño §§10.10 y 10.13: `close_file` retira la apertura e invalida el
+descriptor. `AGENTS.md` no exige protección frente a cambios concurrentes de otros
+programas.
+
+**Vacío:** no se define qué ocurre si otro programa elimina el archivo después de
+abrirlo en el simulador y antes de solicitar el cierre.
+
+Esto no está especificado en el documento; lo propongo como decisión de implementación:
+si el descriptor sigue activo, `close_file` lo retira y devuelve `FILE-05` aunque el
+archivo físico ya no exista. Leer o escribir antes del cierre sí devuelve `FILE_009`
+porque esas operaciones necesitan el destino físico.
+
+**Motivo y límites:** cerrar es una operación sobre la tabla temporal y debe permitir
+liberar una apertura obsoleta. No se intenta recuperar el archivo ni protegerlo de
+cambios externos concurrentes.
+
+**Autorización:** decisión rutinaria compatible con el contrato de cierre; no existe
+una aprobación individual del usuario ni se presenta como requisito académico nuevo.
+
+**Estado y evidencia:** implementada en [archivos.py](simulador/archivos.py) y
+comprobada por `test_cierre_libera_descriptor_si_archivo_desaparece_externamente`.
 
 ## Plantilla para decisiones futuras
 

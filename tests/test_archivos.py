@@ -176,13 +176,19 @@ class IntegracionArchivos(unittest.TestCase):
             "", "   ", ".", "..", "../externo.txt", "..\\externo.txt",
             "/tmp/externo.txt", r"C:\\Windows\\win.ini", r"\\servidor\\recurso",
             "sub/cosa.txt", "sub\\cosa.txt", "archivo:flujo", "NUL", "con.txt",
-            "final.", "final ", ".__simulador_tmp_usuario",
+            "final.", "final ", ".__simulador_tmp_usuario", "interrogante?.txt",
+            "asterisco*.txt", "menor<.txt", "barra|.txt", "control\n.txt",
         )
         for nombre in invalidos:
             with self.subTest(nombre=nombre):
                 self.crear(nombre, "FILE_001")
         self.assertEqual(externo.read_text(encoding="utf-8"), "intacto")
         self.assertEqual(list(self.raiz.iterdir()), [])
+
+    def test_tipos_de_nombre_invalidos(self):
+        for nombre in (None, 7, True, False, [], {}, b"archivo.txt"):
+            with self.subTest(nombre=nombre):
+                self.crear(nombre, "FILE_001")
 
     def test_enlaces_no_se_listan_abren_eliminan_ni_modifican_destino(self):
         externo = Path(self.temporal.name) / "externo.txt"
@@ -254,6 +260,52 @@ class IntegracionArchivos(unittest.TestCase):
         self.assertEqual(descriptor_nuevo, 1)
         self.assertEqual(app_nueva.read_file(descriptor_nuevo).datos["contenido"], "persistente")
 
+    def test_cierre_libera_descriptor_si_archivo_desaparece_externamente(self):
+        self.crear()
+        descriptor = self.abrir().datos["descriptor"]
+        (self.raiz / "nota.txt").unlink()
+        self.llamar("close_file", descriptor, codigo="FILE-05")
+        self.llamar("read_file", descriptor, codigo="FILE_006")
+
+    def test_raiz_eliminada_durante_sesion_es_fallo_fisico(self):
+        self.raiz.rmdir()
+        listado = self.llamar("list_files", codigo="FILE_009")
+        self.assertEqual(listado.datos["operacion"], "acceder_raiz")
+        creacion = self.crear("nuevo.txt", "FILE_009")
+        self.assertEqual(creacion.datos["operacion"], "acceder_raiz")
+
+    def test_codificacion_invalida_no_escapa_como_excepcion(self):
+        self.crear()
+        ruta = self.raiz / "nota.txt"
+        ruta.write_bytes(b"\xff")
+        descriptor = self.abrir(modo="r").datos["descriptor"]
+        lectura = self.llamar("read_file", descriptor, codigo="FILE_009")
+        self.assertEqual(lectura.datos["tipo"], "UnicodeDecodeError")
+
+    def test_escritura_no_codificable_conserva_original_y_limpia_temporal(self):
+        self.crear()
+        ruta = self.raiz / "nota.txt"
+        ruta.write_text("original", encoding="utf-8")
+        descriptor = self.abrir().datos["descriptor"]
+        resultado = self.llamar("write_file", descriptor, "\ud800", codigo="FILE_009")
+        self.assertEqual(resultado.datos["tipo"], "UnicodeEncodeError")
+        self.assertEqual(ruta.read_text(encoding="utf-8"), "original")
+        self.assertEqual([p.name for p in self.raiz.iterdir()], ["nota.txt"])
+
+    def test_datos_de_escritura_no_textuales_se_rechazan_antes_del_gestor(self):
+        self.crear()
+        descriptor = self.abrir().datos["descriptor"]
+        ruta = self.raiz / "nota.txt"
+        ruta.write_text("original", encoding="utf-8")
+        for datos in (None, 3, True, [], {}, b"bytes"):
+            with self.subTest(datos=datos):
+                resultado = self.app.enviar_solicitud(
+                    "write_file", {"descriptor": descriptor, "datos": datos})
+                self.assertEqual(resultado.codigo, "SYS_002")
+                self.assertEqual(self.app.consultar_bitacora()[-1].resultado.codigo, "SYS_002")
+                self.assertFalse(any("GestorArchivos" in p for p in self.app.consultar_recorrido()))
+                self.assertEqual(ruta.read_text(encoding="utf-8"), "original")
+
     def test_fallo_fisico_de_lectura_se_reporta_sin_falso_exito(self):
         self.crear()
         descriptor = self.abrir(modo="r").datos["descriptor"]
@@ -305,6 +357,17 @@ class IntegracionArchivos(unittest.TestCase):
         self.assertIn("GestorArchivos: validar y procesar", recorrido)
         self.assertLess(recorrido.index("GestorArchivos: validar y procesar"),
                         recorrido.index("Kernel: registrar evento final"))
+
+    def test_dispatcher_registra_exactamente_las_once_system_calls(self):
+        esperadas = {
+            "create_process", "list_processes", "get_process", "terminate_process",
+            "create_file", "open_file", "read_file", "write_file", "close_file",
+            "delete_file", "list_files",
+        }
+        self.assertEqual(set(self.dispatcher._registro), esperadas)
+        self.assertEqual(set(self.dispatcher._parametros), esperadas)
+        self.assertNotIn("enviar_solicitud", self.dispatcher._registro)
+        self.assertNotIn("consultar_bitacora", self.dispatcher._registro)
 
 
 if __name__ == "__main__":

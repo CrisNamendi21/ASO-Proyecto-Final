@@ -1,10 +1,10 @@
 # Simulador de interfaz de llamadas al sistema
 
 Proyecto universitario de Arquitectura de Sistemas Operativos en Python y
-Tkinter/ttk. **Incremento 3: gestión completa de archivos.**
+Tkinter/ttk. **Incremento 4: integración, matriz completa y correcciones.**
 Están implementadas las once llamadas: cuatro de procesos y siete de archivos.
-Los próximos incrementos se concentran en completar la revisión visual, la matriz
-final, el manual y las evidencias de entrega.
+La matriz CP/CA/CE está consolidada; los próximos incrementos se concentran en la
+revisión visual manual, el manual y las evidencias de entrega.
 
 La simulación no cambia privilegios del procesador, no ejecuta código dentro del
 kernel anfitrión ni crea o termina procesos reales. Los archivos son físicos y se
@@ -33,6 +33,7 @@ Las decisiones que concretan vacíos del diseño y las excepciones autorizadas s
 mantienen en [DECISIONES.md](DECISIONES.md), con fuente, motivo, aprobación, estado
 y evidencia. Ese registro no sustituye las fuentes ni `AGENTS.md`. Se ubica en la
 raíz para que no quede excluido por la regla existente que ignora `docs/`.
+La correspondencia caso por caso está en [MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md).
 
 ## Preparación y ejecución
 
@@ -63,7 +64,7 @@ python -m unittest discover -s tests -v
 también en una consola Windows con salida redirigida. Usa un directorio temporal
 aislado y no modifica `datos/archivos/`.
 
-## Qué incluyen los incrementos 1, 2 y 3
+## Qué incluyen los incrementos 1 a 4
 
 - Crear un proceso: nombre no vacío, máximo 50 caracteres; prioridad entera 1–5.
 - Rechazar nombres de solo espacios y valores de tipos incorrectos. Los booleanos
@@ -244,8 +245,11 @@ evento y reemplaza la tabla con los datos devueltos.
 | Persistencia y reinicio de aperturas | §10.15 | `archivos.py` | `test_persistencia_fisica_y_reinicio_de_aperturas` |
 | Confinamiento y archivo externo intacto | §10; `AGENTS.md` | validación de nombres, raíz y destinos | pruebas de traversal, rutas, enlaces y hard links |
 | Fallos físicos sin falso éxito | DEC-002 aprobada | `FILE_009` | pruebas de lectura, temporal y reemplazo fallidos |
+| Raíz eliminada y codificación inválida | DEC-002 aprobada | `FILE_009` sin excepción sin manejar | pruebas de raíz y codificación |
+| Cierre tras desaparición física | §§10.10, 10.13; DEC-010 | invalida el descriptor sin acceder al disco | `test_cierre_libera_descriptor_si_archivo_desaparece_externamente` |
 | Bitácora sin copiar contenidos | §13.4 | `bitacora.py` | `test_bitacora_registra_cantidades_sin_contenido` |
-| Pantalla con las siete operaciones | §12.6 | `gui/ventana.py` | `test_secuencia_visible_de_las_siete_operaciones` con Tk real |
+| Registro cerrado de 11 llamadas | §8 | `dispatcher.py` | `test_dispatcher_registra_exactamente_las_once_system_calls` |
+| Pantalla con las siete operaciones | §12.6 | `gui/ventana.py` | secuencia Tk real y geometría sin recortes a 850×700 |
 
 Verificación realizada el 29 de septiembre de 2026:
 
@@ -275,14 +279,24 @@ Verificación realizada el 29 de septiembre de 2026:
   **49 correctas y 2 omitidas**. Las omisiones son las pruebas de symlink de archivo
   y directorio: Windows devolvió `WinError 1314` por falta del privilegio para crearlos.
   La prueba de hard link sí se ejecutó. Ninguna prueba utiliza `datos/archivos/`.
-- `python demo.py`: 19 solicitudes completas; recorrió procesos y las siete llamadas
-  de archivos con un evento por solicitud y almacenamiento temporal aislado.
+- La versión de `demo.py` del incremento 3 recorrió 19 solicitudes de procesos y
+  archivos con un evento por solicitud y almacenamiento temporal aislado.
 - `python -m compileall -q main.py demo.py simulador tests`: sin errores.
 - Prueba funcional de Tk real: crear, abrir, escribir, leer, listar, provocar
   `FILE_008`, cerrar, eliminar, listar vacío y consultar nueve eventos. La ventana
   también abrió con `python main.py`. El controlador de escritorio disponible no
   expuso ventanas nativas, por lo que no se afirma una inspección visual manual de
   distribución, tamaños o recortes para este incremento.
+- Incremento 4: revisión consolidada con **58 pruebas ejecutadas, 56 correctas y
+  2 omitidas** por el mismo privilegio de symlinks. Se añadieron nombres y tipos
+  inválidos, raíz eliminada, codificación no válida, liberación de un descriptor
+  obsoleto, datos no textuales y registro exacto de las 11 llamadas.
+- La GUI se reorganizó después de detectar que Archivos solicitaba 406 píxeles y
+  solo recibía 330. Resultado y Recorrido ahora están en paralelo; las cuatro vistas
+  disponen de su tamaño solicitado incluso con una ventana de 850×700.
+- `python demo.py`: 16 solicitudes en el orden de la demostración académica, códigos
+  verificados y exactamente un evento por solicitud. El archivo se crea y elimina
+  dentro de un directorio temporal.
 
 La prueba funcional de Tk no sustituye la comprobación visual manual de la ventana.
 Los enlaces simbólicos deben volver a probarse en un entorno con ese privilegio.
@@ -292,5 +306,4 @@ Los enlaces simbólicos deben volver a probarse en un entorno con ese privilegio
 - Realizar la comprobación visual manual de Inicio, Archivos, recorrido y Bitácora,
   incluyendo redimensionamiento, foco, scroll y cierre.
 - Ejecutar las pruebas de symlink en un entorno Windows con privilegio para crearlos.
-- Siguiente incremento: consolidar la matriz completa, pruebas de integración y
-  correcciones; después completar manual, evidencias y ensayo de defensa.
+- Completar el manual de uso, capturas/evidencias finales y ensayo de defensa.
