@@ -26,13 +26,15 @@ especificación académica ni sustituye los documentos originales o `AGENTS.md`.
 
 | ID | Decisión | Origen de autorización | Estado |
 | --- | --- | --- | --- |
-| DEC-001 | Ejecutando sin activación automática | Aprobación explícita de las tres recomendaciones | Aprobada; transiciones completas y pruebas pendientes del incremento 2 |
-| DEC-002 | FILE_009 para fallos técnicos de almacenamiento | Aprobación explícita de las tres recomendaciones | Aprobada; implementación pendiente del incremento de archivos |
-| DEC-003 | Escritura mediante temporal y reemplazo posterior | Aprobación explícita de las tres recomendaciones | Aprobada; implementación pendiente del incremento de archivos |
+| DEC-001 | Ejecutando sin activación automática | Aprobación explícita de las tres recomendaciones | Implementada y probada |
+| DEC-002 | FILE_009 para fallos técnicos de almacenamiento | Aprobación explícita de las tres recomendaciones | Implementada y probada |
+| DEC-003 | Escritura mediante temporal y reemplazo posterior | Aprobación explícita de las tres recomendaciones | Implementada y probada |
 | DEC-004 | Rechazar nombres de proceso de solo espacios | Respuesta explícita durante el incremento 1 | Implementada y probada |
-| DEC-005 | Representación concreta del resultado | Análisis aprobado antes del incremento 1 | Implementada para create_process; otras llamadas pendientes |
+| DEC-005 | Representación concreta del resultado | Análisis aprobado antes del incremento 1 | Implementada para las 11 llamadas |
 | DEC-006 | Consulta de bitácora y recorrido sin nuevas system calls | AGENTS.md y análisis aprobado | Implementada y probada en el incremento 1 |
 | DEC-007 | Estructura exacta de parámetros y transporte de solicitudes | Concreción de implementación documentada en el incremento 1 | Implementada y probada; sin aprobación individual registrada |
+| DEC-008 | Incluir estado anterior en la finalización | Aprobación explícita durante el incremento 2 | Implementada y probada |
+| DEC-009 | Reglas concretas para nombres físicos y temporales internos | Decisión rutinaria compatible con el confinamiento | Implementada y probada |
 
 ## DEC-001 — Ejecutando sin activación automática
 
@@ -58,16 +60,15 @@ cambiar estados. Finalizar podrá aplicarse a Listo o Ejecutando.
 **Aprobación:** el usuario aprobó expresamente las tres recomendaciones y pidió dejar
 constancia de los aspectos no previstos en el documento (conversación del 29/09/2026).
 
-**Estado real:** el incremento 1 declara los cuatro estados y solo implementa
-Nuevo → Listo. No hay ejecución automática. Falta implementar y comprobar el
-resto de las transiciones en el incremento 2.
+**Estado real:** implementada. No hay ejecución automática; el gestor conserva y
+valida toda la matriz de transiciones mediante su mecanismo interno.
 
 **Código relacionado:** [procesos.py](simulador/procesos.py).
 
-**Verificación pendiente:** transiciones permitidas y rechazadas, estado terminal,
-máximo un Ejecutando, consultas sin cambios de estado y finalización desde ambos
-estados admitidos. Las pruebas internas podrán preparar Ejecutando; la GUI y el
-programa de demostración no accederán directamente al gestor para hacerlo.
+**Verificación:** [test_procesos.py](tests/test_procesos.py) comprueba transiciones
+permitidas y rechazadas, estado terminal, máximo un Ejecutando, consultas sin cambios
+y finalización desde Listo y Ejecutando. La GUI y la demostración no modifican ese
+estado directamente.
 
 ## DEC-002 — Código FILE_009 para fallos técnicos de almacenamiento
 
@@ -99,12 +100,14 @@ sin permiso a FILE_007. No es una captura indiscriminada de cualquier error del 
 el 29/09/2026. Es una ampliación autorizada del catálogo, no un código del documento
 original ni una autorización del profesor.
 
-**Estado real:** pendiente del incremento de archivos. El catálogo actual en
-[errores.py](simulador/errores.py) todavía contiene solo los códigos originales.
+**Estado real:** implementada en [errores.py](simulador/errores.py) y
+[archivos.py](simulador/archivos.py). Los datos diagnósticos son `operacion`, `tipo`
+y `codigo_host`; si falla la limpieza protegida se añade
+`fallo_limpieza_temporal`.
 
-**Verificación pendiente:** simular fallos de E/S de manera controlada en pruebas
-aisladas, comprobar respuesta y un evento final, ausencia de falso éxito y coherencia
-del estado de aperturas. No utilizar archivos personales ni alterar permisos globales.
+**Verificación:** [test_archivos.py](tests/test_archivos.py) simula permisos denegados
+y falta de espacio dentro de directorios temporales; comprueba `FILE_009`, evento
+final, ausencia de falso éxito y conservación del archivo original.
 
 ## DEC-003 — Proteger la escritura con un temporal controlado
 
@@ -134,13 +137,13 @@ conservará información diagnóstica, también si la limpieza del temporal fall
 **Aprobación:** explícita, dentro de las tres recomendaciones aceptadas por el usuario
 el 29/09/2026.
 
-**Estado real:** pendiente del incremento de archivos; no existe todavía un
-GestorArchivos ni operaciones físicas de archivos de datos.
+**Estado real:** implementada en [archivos.py](simulador/archivos.py). El prefijo
+interno del temporal es `.__simulador_tmp_` y no se expone mediante `list_files`.
 
-**Verificación pendiente:** reemplazo completo y cantidad de caracteres; fallo antes
-del reemplazo que conserve el contenido original; error al reemplazar; administración
-del temporal sin exposición en list_files; bitácora única y ningún falso éxito.
-Las pruebas usarán directorios temporales aislados.
+**Verificación:** [test_archivos.py](tests/test_archivos.py) comprueba reemplazo
+completo, cantidad de caracteres, fallo antes y durante el reemplazo, conservación
+del original, limpieza del temporal y un evento sin copiar contenidos. Todas esas
+pruebas utilizan directorios temporales aislados.
 
 ## DEC-004 — Nombres de proceso compuestos solo por espacios
 
@@ -170,9 +173,9 @@ create_process devuelve `{"pid": identificador}` y los rechazos actuales devuelv
 **Motivo:** respuesta única y fácil de presentar y probar. **Aprobación:** incluida
 en el análisis aprobado por el usuario antes del incremento 1.
 
-**Estado:** [contratos.py](simulador/contratos.py) y creación implementados y probados.
-Las formas propuestas para las otras diez llamadas siguen pendientes de implementación.
-DEC-002 concreta una excepción al diccionario vacío para diagnósticos de fallos técnicos.
+**Estado:** [contratos.py](simulador/contratos.py) y las once llamadas implementadas
+y probadas. DEC-002 concreta la excepción al diccionario vacío para diagnósticos de
+fallos técnicos.
 
 ## DEC-006 — Bitácora en memoria y consultas de solo lectura
 
@@ -215,6 +218,58 @@ académico ni en aprobación explícita.
 
 **Evidencia:** pruebas CE-10, parámetros extra y precedencia en
 [test_integracion.py](tests/test_integracion.py).
+
+## DEC-008 — Estado anterior en el resultado de finalización
+
+**Fuente:** diseño §8.2, que exige registrar en bitácora el PID, estado anterior,
+estado final y resultado de `terminate_process`; contrato uniforme del diseño §8.1.
+
+**Vacío:** el diseño no establece cómo transportar el estado anterior desde el
+gestor hasta el único punto de registro final del kernel.
+
+Esto no está especificado en el documento; lo propongo como decisión de implementación:
+el campo `datos` del resultado exitoso de `terminate_process` contiene `pid`,
+`estado_anterior` y `estado`. Como el kernel registra el resultado completo antes de
+devolverlo, la bitácora conserva ambos estados sin introducir un canal adicional.
+
+**Motivo:** mantiene un solo resultado y un solo evento por solicitud, respeta las
+capas y evita que el kernel consulte directamente el estado interno del gestor.
+
+**Aprobación:** respuesta explícita del usuario durante el incremento 2:
+«Sí, incluir estado_anterior en el resultado y la bitácora».
+
+**Estado:** implementada en [procesos.py](simulador/procesos.py) y comprobada desde
+Listo y Ejecutando por [test_procesos.py](tests/test_procesos.py). La doble
+finalización devuelve `PROC_003` sin modificar el proceso.
+
+## DEC-009 — Reglas concretas para nombres físicos y temporales internos
+
+**Fuente:** diseño §10 y reglas de confinamiento de `AGENTS.md`, que exigen nombres
+simples, rechazar rutas, dispositivos y flujos especiales, y validar antes de cambiar
+el almacenamiento.
+
+**Vacío:** las fuentes no enumeran todas las variantes de nombre que Windows ajusta
+o interpreta especialmente ni reservan un nombre para los temporales de escritura.
+
+Esto no está especificado en el documento; lo propongo como decisión de implementación:
+además de las prohibiciones expresas, se rechazan nombres de solo espacios, nombres
+terminados en punto o espacio y el prefijo interno `.__simulador_tmp_`. No se recortan,
+normalizan ni convierten nombres válidos. El gestor también rechaza `:` para impedir
+flujos alternativos y los nombres de dispositivo de Windows, incluso con extensión.
+Las entradas detectadas como enlaces físicos con más de un nombre también se tratan
+como redirecciones para no exponer un archivo externo mediante un hard link.
+
+**Motivo y límites:** evita que un nombre aceptado cambie de identidad al llegar al
+sistema de archivos y evita colisiones con temporales internos. No añade carpetas,
+rutas ni una regla de extensión obligatoria.
+
+**Autorización:** decisión rutinaria compatible con las reglas de seguridad de
+`AGENTS.md`; no existe una aprobación individual del usuario ni se presenta como
+requisito académico adicional.
+
+**Estado y evidencia:** implementada en [archivos.py](simulador/archivos.py) y
+comprobada por `test_nombres_no_son_rutas_y_no_afectan_archivos_externos` en
+[test_archivos.py](tests/test_archivos.py).
 
 ## Plantilla para decisiones futuras
 
