@@ -3,3 +3,4 @@ docs/
 AGENTS.md
 __pycache__/
 *.pyc
+datos/archivos/

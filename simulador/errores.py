@@ -1,4 +1,4 @@
-"""Catálogo exacto del diseño, sección 13.1; no son errores de Windows."""
+"""Catálogo del diseño §13.1 y ampliación FILE_009 aprobada en DEC-002."""
 
 from .contratos import Resultado
 
@@ -15,6 +15,7 @@ CATALOGO = {
     "FILE_006": "Descriptor inválido o archivo cerrado.",
     "FILE_007": "Operación no permitida por el modo de apertura.",
     "FILE_008": "Intento de eliminar un archivo abierto.",
+    "FILE_009": "Fallo técnico al acceder al almacenamiento del simulador.",
     "SYS_001": "Llamada al sistema no reconocida.",
     "SYS_002": "Parámetros requeridos inválidos o incompletos.",
 }

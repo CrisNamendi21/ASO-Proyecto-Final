@@ -1,12 +1,15 @@
 # Simulador de interfaz de llamadas al sistema
 
 Proyecto universitario de Arquitectura de Sistemas Operativos en Python y
-Tkinter/ttk. **Incremento 1: creación de procesos de extremo a extremo.**
-El proyecto completo aún no está terminado: solo `create_process` está implementada.
+Tkinter/ttk. **Incremento 3: gestión completa de archivos.**
+Están implementadas las once llamadas: cuatro de procesos y siete de archivos.
+Los próximos incrementos se concentran en completar la revisión visual, la matriz
+final, el manual y las evidencias de entrega.
 
 La simulación no cambia privilegios del procesador, no ejecuta código dentro del
-kernel anfitrión ni crea o termina procesos reales. Este incremento tampoco opera
-sobre archivos de datos. Todos los procesos y eventos existen solo durante la sesión.
+kernel anfitrión ni crea o termina procesos reales. Los archivos son físicos y se
+limitan a `datos/archivos/`; procesos, aperturas, descriptores y eventos existen solo
+durante la sesión.
 
 ## Fuentes y decisiones del usuario
 
@@ -57,9 +60,10 @@ python -m unittest discover -s tests -v
 ```
 
 `demo.py` fuerza UTF-8 en su salida para que las flechas del recorrido funcionen
-también en una consola Windows con salida redirigida. No requiere archivos de datos.
+también en una consola Windows con salida redirigida. Usa un directorio temporal
+aislado y no modifica `datos/archivos/`.
 
-## Qué incluye este incremento
+## Qué incluyen los incrementos 1, 2 y 3
 
 - Crear un proceso: nombre no vacío, máximo 50 caracteres; prioridad entera 1–5.
 - Rechazar nombres de solo espacios y valores de tipos incorrectos. Los booleanos
@@ -69,18 +73,36 @@ también en una consola Windows con salida redirigida. No requiere archivos de d
 - Devolver un `Resultado` con `estado`, `codigo`, `mensaje`, `datos`.
 - Registrar exactamente un evento por llamada, incluyendo rechazos.
 - Consultar copias de bitácora y recorrido sin crear nuevos eventos.
-- GUI con Inicio, creación de Procesos, Bitácora, Salir y Archivos deshabilitado.
-- Catálogo central completo de errores, aunque solo se usan `PROC_001`, `SYS_001`
-  y `SYS_002` en esta etapa.
+- GUI con Inicio, Procesos, Archivos, Bitácora y Salir.
+- Catálogo central de errores del diseño y `FILE_009`, ampliación aprobada para
+  fallos físicos del almacenamiento.
+- `list_processes()` con lista vacía válida y copias de PID, nombre, estado y prioridad.
+- `get_process(pid)` con consulta individual y `PROC_002` para PID inválido o inexistente.
+- `terminate_process(pid)` conserva el registro, cambia a Finalizado y devuelve
+  estado anterior y final; una segunda finalización produce `PROC_003`.
+- Matriz interna de transiciones, máximo un Ejecutando y estado Finalizado terminal.
+- Según DEC-001, Ejecutando no se activa automáticamente ni dispone de botón o llamada pública.
+- `ttk.Treeview` con PID, Nombre, Estado y Prioridad, actualizado únicamente mediante
+  una llamada real a `list_processes()`; seleccionar una fila completa el PID.
+- Crear, abrir, leer, escribir, cerrar, eliminar y listar archivos mediante
+  descriptores simulados secuenciales desde 1.
+- Modos exactos `r`, `w` y `rw`, una apertura por archivo, reemplazo total al escribir
+  y permanencia del contenido entre sesiones.
+- Nombres simples y confinamiento bajo `datos/archivos/`; traversal, rutas absolutas,
+  dispositivos, flujos alternativos y redirecciones se rechazan.
+- Escritura protegida mediante temporal dentro de la raíz y reemplazo posterior;
+  un fallo conserva el original y devuelve `FILE_009`.
+- La bitácora registra descriptores y cantidades, sin copiar el contenido leído o escrito.
 
-La enum declara los cuatro estados del diseño. Solo se implementa la transición de
-creación; las demás transiciones y operaciones corresponden al siguiente incremento.
+Las once llamadas están completas. La enum y el gestor de procesos aplican todas
+las transiciones del diseño; el funcionamiento público normal usa Nuevo → Listo →
+Finalizado, conforme a DEC-001.
 
 ## Recorrido y responsabilidades
 
 ```text
 GUI → AplicacionUsuario → InterfazSystemCalls → Kernel → Dispatcher
-    → GestorProcesos → Dispatcher → Kernel [registra evento]
+    → GestorProcesos o GestorArchivos → Dispatcher → Kernel [registra evento]
     → InterfazSystemCalls → AplicacionUsuario → GUI
 ```
 
@@ -92,29 +114,53 @@ GUI → AplicacionUsuario → InterfazSystemCalls → Kernel → Dispatcher
 | `simulador/kernel.py` | Coordina y registra el evento antes del retorno. |
 | `simulador/dispatcher.py` | Registro explícito de operaciones y validación estructural. |
 | `simulador/procesos.py` | `Proceso`, `EstadoProceso`, `GestorProcesos`; dueño del estado. |
+| `simulador/archivos.py` | `Archivo`, aperturas y `GestorArchivos`; único acceso físico a los archivos. |
 | `simulador/contratos.py` | Dataclasses `Solicitud` y `Resultado`. |
 | `simulador/errores.py` | Catálogo del diseño §13.1. |
 | `simulador/bitacora.py` | Eventos en memoria y copias de consulta. |
 | `simulador/gui/ventana.py` | Entradas y presentación; no importa gestores ni accede al disco. |
 | `demo.py` | Programa de prueba a través de la aplicación en modo usuario. |
 | `tests/test_integracion.py` | Pruebas de contratos, efectos, eventos y recorrido real. |
+| `tests/test_archivos.py` | CA-01–CA-07, CE-04–CE-09, permisos, persistencia, fallos y confinamiento. |
 
-Las pruebas inspeccionan el estado privado del gestor para comprobar los efectos
-porque las consultas de procesos todavía no están implementadas. El código de
-presentación y la aplicación nunca utilizan esa vía.
+Las pruebas internas inspeccionan invariantes privadas cuando es necesario. Las
+pruebas de integración entran por `AplicacionUsuario`; la GUI y la aplicación nunca
+importan gestores ni acceden al disco.
 
 ## Contrato vigente y validaciones
 
-Firma pública: `create_process(nombre: str, prioridad: int) -> Resultado`.
+Las firmas públicas son las once indicadas en el diseño: `create_process`,
+`list_processes`, `get_process`, `terminate_process`, `create_file`, `open_file`,
+`read_file`, `write_file`, `close_file`, `delete_file` y `list_files`. Todas devuelven
+un `Resultado`.
 
 | Resultado | estado | codigo | datos |
 | --- | --- | --- | --- |
 | Creación válida | `EXITO` | `PROC-01` | `{"pid": 101}` (PID asignado) |
+| Listado válido | `EXITO` | `PROC-02` | `{"procesos": [...]}` |
+| Consulta válida | `EXITO` | `PROC-03` | `{"proceso": {...}}` |
+| Finalización válida | `EXITO` | `PROC-04` | `{"pid": 101, "estado": "Finalizado", "estado_anterior": "Listo"}` |
 | Nombre o prioridad inválidos | `ERROR` | `PROC_001` | `{}` |
+| PID inválido o inexistente | `ERROR` | `PROC_002` | `{}` |
+| Proceso previamente finalizado | `ERROR` | `PROC_003` | `{}` |
 | Llamada desconocida | `ERROR` | `SYS_001` | `{}` |
 | Estructura de parámetros inválida/incompleta | `ERROR` | `SYS_002` | `{}` |
 
 La prioridad es informativa. No hay scheduler ni ejecución real.
+
+| Operación válida | codigo | forma de `datos` |
+| --- | --- | --- |
+| `create_file` | `FILE-01` | `{"nombre": str, "estado": "Cerrado"}` |
+| `open_file` | `FILE-02` | `{"descriptor": int}` |
+| `read_file` | `FILE-03` | `{"contenido": str}` |
+| `write_file` | `FILE-04` | `{"caracteres_escritos": int}` |
+| `close_file` | `FILE-05` | `{"descriptor": int, "estado": "Cerrado"}` |
+| `delete_file` | `FILE-06` | `{"nombre": str}` |
+| `list_files` | `FILE-07` | `{"archivos": [{"nombre", "estado", "descriptor", "modo"}, ...]}` |
+
+Los errores `FILE_001`–`FILE_008` devuelven `datos={}`. `FILE_009`, ampliación
+aprobada en DEC-002, devuelve diagnóstico con `operacion`, `tipo` y `codigo_host`;
+puede incluir `fallo_limpieza_temporal`. No contiene el texto del archivo.
 
 Esto no está especificado en el documento; lo propongo como decisión de implementación:
 los valores concretos `EXITO`/`ERROR` y el diccionario `datos` son la representación
@@ -132,14 +178,20 @@ Precedencia:
 2. Estructura: parámetros no representados por un diccionario, ausentes o extra → `SYS_002`.
 3. Dominio: nombre inválido o prioridad inválida → `PROC_001` en el gestor.
 
+En archivos, `open_file` valida nombre, existencia, redirección/tipo, modo y apertura
+activa en ese orden. Las operaciones por descriptor validan primero el descriptor y
+luego su permiso; `delete_file` comprueba nombre, existencia, redirección/tipo y
+apertura. Así, cada entrada que infringe varias reglas tiene un resultado reproducible.
+
 Identificar antes de procesar corresponde al flujo del diseño §11.5. Esto no está
 especificado en el documento; lo propongo como decisión de implementación: exigir
 exactamente las claves de la firma impide aceptar parámetros adicionales ignorados.
 Nombre y prioridad comparten código, por lo que su orden no cambia el resultado.
 
 La bitácora incluye número, fecha/hora con zona local, llamada, parámetros y
-`Resultado` completo (estado, código, mensaje y datos). Los parámetros de esta
-etapa contienen solo los datos de creación o solicitudes de prueba.
+`Resultado` (estado, código, mensaje y datos). En `write_file` reemplaza el texto por
+`caracteres_solicitados`; en `read_file` registra `caracteres_leidos` en vez del
+contenido. Las demás llamadas conservan sus parámetros y resultado completos.
 
 Esto no está especificado en el documento; lo propongo como decisión de implementación:
 la bitácora permanece en memoria y su consulta devuelve copias mediante aplicación,
@@ -155,11 +207,17 @@ Consultar cualquiera de ambos no altera recursos ni genera eventos.
 4. Crear otro proceso: debe recibir PID 102, incluso si el nombre se repite.
 5. Revisar el recorrido conceptual y abrir Bitácora. Cada intento tiene un evento.
 6. Seleccionar un evento para ver parámetros, estado, código, mensaje y datos.
-7. Cambiar de pantalla y regresar: consultar no debe añadir eventos.
-8. Pulsar Salir. Al abrir otra sesión la bitácora está vacía y el primer PID será 101.
+7. Ir a Archivos, crear `ejemplo.txt`, elegir `rw`, abrir y observar el descriptor 1.
+8. Escribir texto, leerlo, cerrar y listar. La fila debe mostrar estado Cerrado.
+9. Abrirlo de nuevo, intentar eliminarlo y observar `FILE_008`; cerrarlo y eliminarlo.
+10. Crear `../externo.txt` debe devolver `FILE_001` sin crear nada fuera de la raíz.
+11. Cambiar de pantalla y regresar: consultar la bitácora no añade eventos.
+12. Pulsar Salir. Al abrir otra sesión la bitácora está vacía, el primer PID es 101
+    y el primer descriptor es 1; los archivos no eliminados permanecen.
 
-El listado `Treeview` de procesos y sus consultas todavía no existen; se añadirán
-junto a las otras tres llamadas. La GUI no fabrica una lista a partir de las entradas.
+Las tablas no se actualizan fabricando filas después de una modificación. El usuario
+pulsa Listar procesos o Listar archivos; esa llamada atraviesa las capas, genera su
+evento y reemplaza la tabla con los datos devueltos.
 
 ## Trazabilidad y evidencia
 
@@ -176,6 +234,18 @@ junto a las otras tres llamadas. La GUI no fabrica una lista a partir de las ent
 | Recorrido y registro antes del retorno | §§6.9, 8.4, 11.1 | Todas las capas | `test_recorrido_real_y_registro_antes_del_retorno` observa las invocaciones reales |
 | Consulta sin alteración ni eventos | §12.8 y `AGENTS.md` | Copias en `bitacora.py` | `test_copias_no_permiten_modificar_registro_ni_estado`, `test_consultas_de_bitacora_y_recorrido_no_generan_eventos` |
 | Reinicio de estado temporal | §§9.5, 12.9 | Nuevas instancias | `test_sesiones_independientes` |
+| Listar, consultar y finalizar | §§8.2, 9.7–9.8; CP-02–CP-04 | Capas y `procesos.py` | `test_CP_02_listado_y_vacio`, `test_CP_03_consulta_individual`, `test_CP_04_finalizar_conserva_registro_y_no_reutiliza_pid` |
+| PID inválido y doble finalización | §9.9; CE-02–CE-03 | `procesos.py` | `test_CE_02_pid_inexistente_en_consulta_y_finalizacion`, `test_CE_03_doble_finalizacion`, pruebas de tipos |
+| Transiciones y un solo Ejecutando | §§9.3–9.4; DEC-001 | `_cambiar_estado` interno | `TransicionesInternas` y prueba de finalización desde Ejecutando |
+| Estado anterior en finalización | §8.2; DEC-008 aprobada | resultado PROC-04 y evento | pruebas CP-04 y Ejecutando |
+| Flujo completo de archivos | §§8.3, 10; CA-01–CA-07 | Capas y `archivos.py` | `test_CA_01_a_CA_07_flujo_documental_completo` |
+| Existencia, apertura y descriptores inválidos | §10.7–10.13; CE-04–CE-09 | `archivos.py` | pruebas `test_CE_04` a `test_CE_09` |
+| Modos, reemplazo y descriptores secuenciales | §§10.4–10.10 | `archivos.py` | `test_modos_no_truncan_y_aplican_permisos`, pruebas de reemplazo y secuencia |
+| Persistencia y reinicio de aperturas | §10.15 | `archivos.py` | `test_persistencia_fisica_y_reinicio_de_aperturas` |
+| Confinamiento y archivo externo intacto | §10; `AGENTS.md` | validación de nombres, raíz y destinos | pruebas de traversal, rutas, enlaces y hard links |
+| Fallos físicos sin falso éxito | DEC-002 aprobada | `FILE_009` | pruebas de lectura, temporal y reemplazo fallidos |
+| Bitácora sin copiar contenidos | §13.4 | `bitacora.py` | `test_bitacora_registra_cantidades_sin_contenido` |
+| Pantalla con las siete operaciones | §12.6 | `gui/ventana.py` | `test_secuencia_visible_de_las_siete_operaciones` con Tk real |
 
 Verificación realizada el 29 de septiembre de 2026:
 
@@ -193,25 +263,34 @@ Verificación realizada el 29 de septiembre de 2026:
   Se comprobó el cierre mediante Salir y la terminación de la sesión anterior.
 - Comprobación de independencia: importar `main` y construir la aplicación de
   usuario no incorpora `tkinter` a los módulos cargados.
+- Incremento 2: `python -m unittest discover -s tests -v`: **28 pruebas correctas**,
+  sin omisiones. `python demo.py` recorrió creación, listado, consulta, PID inexistente,
+  finalización, consulta/listado de Finalizado y doble finalización, con un evento por solicitud.
+- Revisión visual del incremento 2: Inicio, los cuatro controles, listado vacío,
+  creación de PID 101, aviso de tabla desactualizada, listado con sus cuatro columnas,
+  selección de fila, consulta individual, finalización con estado anterior y final,
+  nuevo listado conservando el proceso Finalizado, error `PROC_003` por doble
+  finalización y cinco eventos correspondientes en Bitácora. Se cerró mediante Salir.
+- Incremento 3: `python -m unittest discover -s tests -v`: **51 pruebas ejecutadas**,
+  **49 correctas y 2 omitidas**. Las omisiones son las pruebas de symlink de archivo
+  y directorio: Windows devolvió `WinError 1314` por falta del privilegio para crearlos.
+  La prueba de hard link sí se ejecutó. Ninguna prueba utiliza `datos/archivos/`.
+- `python demo.py`: 19 solicitudes completas; recorrió procesos y las siete llamadas
+  de archivos con un evento por solicitud y almacenamiento temporal aislado.
+- `python -m compileall -q main.py demo.py simulador tests`: sin errores.
+- Prueba funcional de Tk real: crear, abrir, escribir, leer, listar, provocar
+  `FILE_008`, cerrar, eliminar, listar vacío y consultar nueve eventos. La ventana
+  también abrió con `python main.py`. El controlador de escritorio disponible no
+  expuso ventanas nativas, por lo que no se afirma una inspección visual manual de
+  distribución, tamaños o recortes para este incremento.
 
-Las pruebas sin GUI no sustituyen la comprobación visual. Este incremento no prueba
-confinamiento, archivos ni operaciones de procesos todavía no implementadas.
+La prueba funcional de Tk no sustituye la comprobación visual manual de la ventana.
+Los enlaces simbólicos deben volver a probarse en un entorno con ese privilegio.
 
 ## Pendiente
 
-- Incremento 2: `list_processes`, `get_process`, `terminate_process`, transiciones,
-  Treeview de procesos, CP-02–CP-04 y CE-02–CE-03.
-- Implementar las transiciones internas de `Ejecutando` sin activación automática,
-  según la decisión aprobada [DEC-001](DECISIONES.md#dec-001--ejecutando-sin-activación-automática).
-  No se añade botón, scheduler ni llamada pública para ejecutarlo.
-- Incremento de archivos: siete llamadas, confinamiento, aperturas, persistencia,
-  CA-01–CA-07, CE-04–CE-09 y pruebas adicionales de seguridad.
-- Incorporar `FILE_009` para fallos técnicos de almacenamiento y escritura mediante
-  temporal controlado y reemplazo posterior, según DEC-002 y DEC-003 de
-  [DECISIONES.md](DECISIONES.md). Ambas decisiones están aprobadas, pero todavía
-  no implementadas. No forman parte del catálogo ni del mecanismo originales.
-- Completar GUI, demostración general, evidencias, manual y defensa.
-
-Las otras diez llamadas no están registradas en este incremento; no son éxitos
-simulados ni funcionalidades terminadas. La meta final sigue siendo las once llamadas
-del diseño, sin renombrarlas o reemplazarlas.
+- Realizar la comprobación visual manual de Inicio, Archivos, recorrido y Bitácora,
+  incluyendo redimensionamiento, foco, scroll y cierre.
+- Ejecutar las pruebas de symlink en un entorno Windows con privilegio para crearlos.
+- Siguiente incremento: consolidar la matriz completa, pruebas de integración y
+  correcciones; después completar manual, evidencias y ensayo de defensa.

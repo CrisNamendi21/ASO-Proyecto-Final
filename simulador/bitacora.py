@@ -21,12 +21,26 @@ class Bitacora:
         self._eventos: list[Evento] = []
 
     def registrar(self, solicitud: Solicitud, resultado: Resultado) -> None:
+        parametros = deepcopy(solicitud.parametros)
+        resultado_registrado = deepcopy(resultado)
+        # Diseño §13.4: la bitácora registra cantidades, no el contenido leído/escrito.
+        if solicitud.llamada == "write_file" and "datos" in parametros:
+            datos = parametros.pop("datos")
+            parametros["caracteres_solicitados"] = len(datos) if isinstance(datos, str) else None
+        if solicitud.llamada == "read_file" and resultado.estado == "EXITO":
+            contenido = resultado.datos.get("contenido")
+            resultado_registrado = Resultado(
+                resultado.estado,
+                resultado.codigo,
+                resultado.mensaje,
+                {"caracteres_leidos": len(contenido)} if isinstance(contenido, str) else {},
+            )
         self._eventos.append(Evento(
             numero=len(self._eventos) + 1,
             fecha_hora=datetime.now().astimezone().isoformat(timespec="seconds"),
             llamada=deepcopy(solicitud.llamada),
-            parametros=deepcopy(solicitud.parametros),
-            resultado=deepcopy(resultado),
+            parametros=parametros,
+            resultado=resultado_registrado,
         ))
 
     def consultar(self) -> tuple[Evento, ...]:
