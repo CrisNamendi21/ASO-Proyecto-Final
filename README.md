@@ -34,6 +34,9 @@ mantienen en [DECISIONES.md](DECISIONES.md), con fuente, motivo, aprobación, es
 y evidencia. Ese registro no sustituye las fuentes ni `AGENTS.md`. Se ubica en la
 raíz para que no quede excluido por la regla existente que ignora `docs/`.
 La correspondencia caso por caso está en [MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md).
+El uso reproducible de la aplicación está en [MANUAL_USO.md](MANUAL_USO.md), la
+evidencia consolidada en [EVIDENCIAS.md](EVIDENCIAS.md) y el guion de exposición en
+[GUIA_DEFENSA.md](GUIA_DEFENSA.md).
 
 ## Preparación y ejecución
 
@@ -297,13 +300,20 @@ Verificación realizada el 29 de septiembre de 2026:
 - `python demo.py`: 16 solicitudes en el orden de la demostración académica, códigos
   verificados y exactamente un evento por solicitud. El archivo se crea y elimina
   dentro de un directorio temporal.
+- Incremento 5: revisión visual manual con la ventana nativa a 1050×780. Inicio,
+  Procesos, Archivos y Bitácora se observaron sin recortes. Se creó y listó el proceso
+  temporal `Evidencia` (PID 101), se comprobó su resultado y recorrido, y la bitácora
+  mostró exactamente los eventos `create_process` y `list_processes`. El detalle y
+  los pasos reproducibles están en [EVIDENCIAS.md](EVIDENCIAS.md).
+- Se añadieron [MANUAL_USO.md](MANUAL_USO.md), [EVIDENCIAS.md](EVIDENCIAS.md) y
+  [GUIA_DEFENSA.md](GUIA_DEFENSA.md). No contienen requisitos nuevos: presentan la
+  implementación, pruebas y decisiones ya documentadas.
 
-La prueba funcional de Tk no sustituye la comprobación visual manual de la ventana.
-Los enlaces simbólicos deben volver a probarse en un entorno con ese privilegio.
+La prueba funcional de Tk complementa la revisión visual manual. Los enlaces
+simbólicos deben volver a probarse en un entorno con ese privilegio.
 
 ## Pendiente
 
-- Realizar la comprobación visual manual de Inicio, Archivos, recorrido y Bitácora,
-  incluyendo redimensionamiento, foco, scroll y cierre.
 - Ejecutar las pruebas de symlink en un entorno Windows con privilegio para crearlos.
-- Completar el manual de uso, capturas/evidencias finales y ensayo de defensa.
+- Antes de entregar, el equipo puede repetir el recorrido de
+  [MANUAL_USO.md](MANUAL_USO.md) y ensayar [GUIA_DEFENSA.md](GUIA_DEFENSA.md).
