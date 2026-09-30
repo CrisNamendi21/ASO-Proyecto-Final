@@ -1,4 +1,4 @@
-# Informe de cierre — incremento 6
+# Informe de cierre — incremento 7
 
 Fecha de verificación: 29 de septiembre de 2026.
 
@@ -32,6 +32,10 @@ python verificar_entrega.py
 El comando comprueba los archivos requeridos, la disponibilidad de Tkinter, la
 compilación, la suite completa y la demostración. Devuelve código distinto de cero
 si alguna fase falla.
+
+La entrega portable se construye con `python crear_paquete.py`. Su lista cerrada de
+archivos y exclusiones está documentada en `MANIFIESTO_ENTREGA.md`; el ZIP se entrega
+con una suma SHA-256 para verificar que no cambió después de generarlo.
 
 ## Limitación del entorno
 

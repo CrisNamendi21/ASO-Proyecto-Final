@@ -49,3 +49,16 @@ seguridad están implementados, pero esa capacidad del anfitrión no estaba disp
 `python verificar_entrega.py` comprobó en una sola ejecución los 12 archivos de
 entrega requeridos, Tkinter, compilación, 58 pruebas y la demostración de 16
 solicitudes. El resultado final fue `ENTREGA VERIFICADA`.
+
+## Cierre del incremento 7
+
+`crear_paquete.py` utiliza una lista explícita de los archivos entregables y crea
+un ZIP portable junto con su suma SHA-256. El ZIP excluye Git, cachés y el contenido
+personal de `datos/archivos/`; incluye esa carpeta vacía para que la aplicación quede
+lista para ejecutarse después de extraerla.
+
+El paquete final contiene 33 entradas: 32 archivos y el directorio vacío de datos.
+Se verificaron su SHA-256, la ausencia de entradas duplicadas o prohibidas y la
+ausencia de archivos personales. Tras extraerlo en un directorio temporal, se
+ejecutó `python verificar_entrega.py`: terminó con código 0 y mostró
+`ENTREGA VERIFICADA`.

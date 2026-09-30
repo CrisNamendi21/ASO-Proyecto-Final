@@ -11,12 +11,15 @@ ARCHIVOS_REQUERIDOS = (
     "main.py",
     "demo.py",
     "verificar_entrega.py",
+    "crear_paquete.py",
     "README.md",
     "MANUAL_USO.md",
     "MATRIZ_PRUEBAS.md",
     "DECISIONES.md",
     "EVIDENCIAS.md",
     "GUIA_DEFENSA.md",
+    "ENTREGA_FINAL.md",
+    "MANIFIESTO_ENTREGA.md",
     "AGENTS.md",
     "docs/Proyecto Arquitectura de sistemas operativos.docx",
     "docs/Propuesta #7.pdf",
@@ -58,7 +61,8 @@ def main() -> int:
 
     verificaciones = (
         ("Compilación", ["-m", "compileall", "-q", "main.py", "demo.py",
-                          "verificar_entrega.py", "simulador", "tests"]),
+                          "verificar_entrega.py", "crear_paquete.py",
+                          "simulador", "tests"]),
         ("Pruebas", ["-m", "unittest", "discover", "-s", "tests", "-v"]),
         ("Demostración", ["demo.py"]),
     )
