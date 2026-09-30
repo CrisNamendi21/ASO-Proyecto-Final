@@ -43,3 +43,9 @@ para repetirlos mediante [MANUAL_USO.md](MANUAL_USO.md).
 Los dos casos de symlink deben repetirse en un Windows con privilegio de creación de
 enlaces simbólicos. No es un fallo funcional conocido: el código y los casos de
 seguridad están implementados, pero esa capacidad del anfitrión no estaba disponible.
+
+## Cierre del incremento 6
+
+`python verificar_entrega.py` comprobó en una sola ejecución los 12 archivos de
+entrega requeridos, Tkinter, compilación, 58 pruebas y la demostración de 16
+solicitudes. El resultado final fue `ENTREGA VERIFICADA`.

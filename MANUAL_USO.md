@@ -19,6 +19,12 @@ python demo.py
 python -m unittest discover -s tests -v
 ```
 
+Para ejecutar toda la verificación de entrega con un solo comando:
+
+```powershell
+python verificar_entrega.py
+```
+
 No hay dependencias externas que instalar.
 
 ## Recorrido manual de demostración

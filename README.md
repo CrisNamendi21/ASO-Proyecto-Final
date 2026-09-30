@@ -1,7 +1,7 @@
 # Simulador de interfaz de llamadas al sistema
 
 Proyecto universitario de Arquitectura de Sistemas Operativos en Python y
-Tkinter/ttk. **Incremento 4: integración, matriz completa y correcciones.**
+Tkinter/ttk. **Incremento 6: cierre técnico y verificación de entrega.**
 Están implementadas las once llamadas: cuatro de procesos y siete de archivos.
 La matriz CP/CA/CE está consolidada; los próximos incrementos se concentran en la
 revisión visual manual, el manual y las evidencias de entrega.
@@ -37,6 +37,8 @@ La correspondencia caso por caso está en [MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md)
 El uso reproducible de la aplicación está en [MANUAL_USO.md](MANUAL_USO.md), la
 evidencia consolidada en [EVIDENCIAS.md](EVIDENCIAS.md) y el guion de exposición en
 [GUIA_DEFENSA.md](GUIA_DEFENSA.md).
+El resultado contra los criterios de aceptación está en
+[ENTREGA_FINAL.md](ENTREGA_FINAL.md).
 
 ## Preparación y ejecución
 
@@ -61,6 +63,12 @@ Pruebas:
 
 ```powershell
 python -m unittest discover -s tests -v
+```
+
+Verificación completa de entrega:
+
+```powershell
+python verificar_entrega.py
 ```
 
 `demo.py` fuerza UTF-8 en su salida para que las flechas del recorrido funcionen
@@ -308,6 +316,10 @@ Verificación realizada el 29 de septiembre de 2026:
 - Se añadieron [MANUAL_USO.md](MANUAL_USO.md), [EVIDENCIAS.md](EVIDENCIAS.md) y
   [GUIA_DEFENSA.md](GUIA_DEFENSA.md). No contienen requisitos nuevos: presentan la
   implementación, pruebas y decisiones ya documentadas.
+- Incremento 6: [verificar_entrega.py](verificar_entrega.py) reúne comprobación de
+  archivos requeridos, Tkinter, compilación, pruebas y demostración. Su ejecución
+  final devolvió `ENTREGA VERIFICADA`. [ENTREGA_FINAL.md](ENTREGA_FINAL.md) contrasta
+  cada criterio de aceptación con su evidencia.
 
 La prueba funcional de Tk complementa la revisión visual manual. Los enlaces
 simbólicos deben volver a probarse en un entorno con ese privilegio.

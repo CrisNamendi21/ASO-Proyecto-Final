@@ -12,7 +12,7 @@ class Ventana:
     def __init__(self, raiz: tk.Tk, aplicacion: AplicacionUsuario) -> None:
         self.raiz = raiz
         self.aplicacion = aplicacion
-        raiz.title("Simulador de System Calls — Incremento 4")
+        raiz.title("Simulador de System Calls — Incremento 6")
         raiz.geometry("1050x780")
         raiz.minsize(850, 700)
         raiz.columnconfigure(1, weight=1)
@@ -70,7 +70,7 @@ class Ventana:
         vista = self._vista("Inicio")
         ttk.Label(vista, text="Procesos y archivos simulados", font=("Segoe UI", 14, "bold")).pack(anchor="w")
         ttk.Label(vista, wraplength=620, justify="left", text=(
-            "Este incremento incorpora las cuatro operaciones de procesos y las siete de archivos.\n\n"
+            "Esta versión incorpora las cuatro operaciones de procesos y las siete de archivos.\n\n"
             "GUI → Aplicación en modo usuario → System Call Interface → Kernel simulado → "
             "Dispatcher → Gestor correspondiente → Resultado/error → retorno al usuario.\n\n"
             "Cada solicitud genera un evento de bitácora. Los procesos no son procesos de Windows "
