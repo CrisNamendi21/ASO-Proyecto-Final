@@ -12,7 +12,7 @@ class Ventana:
     def __init__(self, raiz: tk.Tk, aplicacion: AplicacionUsuario) -> None:
         self.raiz = raiz
         self.aplicacion = aplicacion
-        raiz.title("Simulador de System Calls — Incremento 6")
+        raiz.title("Simulador de System Calls — Incremento 7")
         raiz.geometry("1050x780")
         raiz.minsize(850, 700)
         raiz.columnconfigure(1, weight=1)

@@ -299,6 +299,31 @@ una aprobación individual del usuario ni se presenta como requisito académico 
 **Estado y evidencia:** implementada en [archivos.py](simulador/archivos.py) y
 comprobada por `test_cierre_libera_descriptor_si_archivo_desaparece_externamente`.
 
+## DEC-011 — Paquete portable mediante una lista cerrada
+
+**Fuente:** los criterios finales de `AGENTS.md` exigen que el programa, las pruebas,
+el manual y las evidencias estén disponibles; la propuesta define los entregables.
+
+**Vacío:** las fuentes no establecen un formato de compresión ni cómo excluir del
+paquete cachés, historial de Git y archivos físicos creados durante una sesión.
+
+Esto no está especificado en el documento; lo propongo como decisión de implementación:
+`crear_paquete.py` genera un ZIP mediante una lista cerrada de fuentes, pruebas,
+documentación y documentos originales. Incluye `datos/archivos/` como directorio
+vacío, excluye su contenido local y produce una suma SHA-256 separada.
+
+**Motivo y límites:** evita entregar archivos personales u omitir documentos ignorados
+por Git. Es una herramienta de preparación de entrega; no modifica las 11 llamadas,
+las capas, el almacenamiento ni añade dependencias externas.
+
+**Autorización:** el usuario solicitó realizar el incremento 7 después de que se
+propusiera expresamente como preparación de una entrega portable.
+
+**Estado y evidencia:** implementada en [crear_paquete.py](crear_paquete.py) y
+documentada en [MANIFIESTO_ENTREGA.md](MANIFIESTO_ENTREGA.md). Se verificó la suma,
+el manifiesto interno, las exclusiones y `verificar_entrega.py` desde una extracción
+temporal; el resultado fue `ENTREGA VERIFICADA`.
+
 ## Plantilla para decisiones futuras
 
 ### DEC-NNN — Título concreto

@@ -1,10 +1,10 @@
 # Simulador de interfaz de llamadas al sistema
 
 Proyecto universitario de Arquitectura de Sistemas Operativos en Python y
-Tkinter/ttk. **Incremento 6: cierre técnico y verificación de entrega.**
+Tkinter/ttk. **Incremento 7: paquete portable de entrega.**
 Están implementadas las once llamadas: cuatro de procesos y siete de archivos.
-La matriz CP/CA/CE está consolidada; los próximos incrementos se concentran en la
-revisión visual manual, el manual y las evidencias de entrega.
+La matriz CP/CA/CE, la revisión visual, el manual, las evidencias y el paquete
+portable de entrega están consolidados.
 
 La simulación no cambia privilegios del procesador, no ejecuta código dentro del
 kernel anfitrión ni crea o termina procesos reales. Los archivos son físicos y se
@@ -26,8 +26,8 @@ durante la sesión.
 - El usuario confirmó rechazar nombres de solo espacios con `PROC_001`, conservar
   sin recortar los nombres válidos y contar su longitud original.
 
-No se modificaron documentos fuente. `docs/` y `AGENTS.md` ya estaban ignorados en
-Git al comenzar este incremento; deben acompañar al proyecto por separado.
+No se modificaron documentos fuente. `docs/` y `AGENTS.md` están ignorados en Git,
+pero `crear_paquete.py` los incorpora expresamente al ZIP local de entrega.
 
 Las decisiones que concretan vacíos del diseño y las excepciones autorizadas se
 mantienen en [DECISIONES.md](DECISIONES.md), con fuente, motivo, aprobación, estado
@@ -70,6 +70,16 @@ Verificación completa de entrega:
 ```powershell
 python verificar_entrega.py
 ```
+
+Creación del paquete portable y su suma SHA-256:
+
+```powershell
+python crear_paquete.py
+```
+
+El contenido y las exclusiones del ZIP se detallan en
+[MANIFIESTO_ENTREGA.md](MANIFIESTO_ENTREGA.md). El paquete deja
+`datos/archivos/` vacío para no distribuir archivos personales o de demostración.
 
 `demo.py` fuerza UTF-8 en su salida para que las flechas del recorrido funcionen
 también en una consola Windows con salida redirigida. Usa un directorio temporal
@@ -320,6 +330,10 @@ Verificación realizada el 29 de septiembre de 2026:
   archivos requeridos, Tkinter, compilación, pruebas y demostración. Su ejecución
   final devolvió `ENTREGA VERIFICADA`. [ENTREGA_FINAL.md](ENTREGA_FINAL.md) contrasta
   cada criterio de aceptación con su evidencia.
+- Incremento 7: [crear_paquete.py](crear_paquete.py) genera una entrega portable
+  mediante una lista explícita de fuentes, pruebas, manuales y documentos originales.
+  Excluye Git, cachés, artefactos previos y datos personales; además produce una suma
+  SHA-256. El contenido se define en [MANIFIESTO_ENTREGA.md](MANIFIESTO_ENTREGA.md).
 
 La prueba funcional de Tk complementa la revisión visual manual. Los enlaces
 simbólicos deben volver a probarse en un entorno con ese privilegio.
