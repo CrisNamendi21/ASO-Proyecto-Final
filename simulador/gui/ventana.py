@@ -12,14 +12,15 @@ class Ventana:
     def __init__(self, raiz: tk.Tk, aplicacion: AplicacionUsuario) -> None:
         self.raiz = raiz
         self.aplicacion = aplicacion
-        raiz.title("Simulador de System Calls — Incremento 7")
+        self._configurar_estilos()
+        raiz.title("Simulador de System Calls")
         raiz.geometry("1050x780")
         raiz.minsize(850, 700)
         raiz.columnconfigure(1, weight=1)
         raiz.rowconfigure(1, weight=1)
 
         ttk.Label(raiz, text="Simulador de interfaz de llamadas al sistema",
-                  font=("Segoe UI", 16, "bold"), padding=16).grid(
+                  style="Encabezado.TLabel", padding=18).grid(
                       row=0, column=0, columnspan=2, sticky="w")
 
         lateral = ttk.Frame(raiz, padding=12)
@@ -61,6 +62,20 @@ class Ventana:
         self._poner_texto(self.recorrido, "El recorrido aparecerá después de una llamada.")
         self.mostrar("Inicio")
 
+    def _configurar_estilos(self) -> None:
+        """Aplica una escala legible y uniforme sin alterar la lógica de la GUI."""
+        estilo = ttk.Style(self.raiz)
+        estilo.configure("TLabel", font=("Segoe UI", 11))
+        estilo.configure("TButton", font=("Segoe UI", 11), padding=(12, 7))
+        estilo.configure("TEntry", font=("Segoe UI", 11), padding=5)
+        estilo.configure("TCombobox", font=("Segoe UI", 11), padding=4)
+        estilo.configure("TLabelframe.Label", font=("Segoe UI", 11, "bold"))
+        estilo.configure("Treeview", font=("Segoe UI", 10), rowheight=27)
+        estilo.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
+        estilo.configure("Encabezado.TLabel", font=("Segoe UI", 18, "bold"))
+        estilo.configure("Titulo.TLabel", font=("Segoe UI", 16, "bold"))
+        estilo.configure("Destacado.TLabel", font=("Segoe UI", 11, "bold"))
+
     def _vista(self, nombre: str) -> ttk.Frame:
         vista = ttk.Frame(self.contenido)
         self.vistas[nombre] = vista
@@ -68,24 +83,55 @@ class Ventana:
 
     def _crear_inicio(self) -> None:
         vista = self._vista("Inicio")
-        ttk.Label(vista, text="Procesos y archivos simulados", font=("Segoe UI", 14, "bold")).pack(anchor="w")
-        ttk.Label(vista, wraplength=620, justify="left", text=(
-            "Esta versión incorpora las cuatro operaciones de procesos y las siete de archivos.\n\n"
-            "GUI → Aplicación en modo usuario → System Call Interface → Kernel simulado → "
-            "Dispatcher → Gestor correspondiente → Resultado/error → retorno al usuario.\n\n"
-            "Cada solicitud genera un evento de bitácora. Los procesos no son procesos de Windows "
-            "y los descriptores no son manejadores del sistema operativo.\n\n"
-            "Finalizar conserva el proceso en estado Finalizado. Las consultas no cambian estados. "
-            "No hay activación automática de Ejecutando ni planificación del procesador.\n\n"
-            "Los archivos físicos quedan confinados en datos/archivos y sobreviven al cierre; "
-            "las aperturas y los descriptores solo duran durante la sesión."
-        )).pack(anchor="w", pady=16)
+        vista.columnconfigure(0, weight=1, uniform="inicio")
+        vista.columnconfigure(1, weight=1, uniform="inicio")
+        vista.rowconfigure(3, weight=1)
+
+        ttk.Label(vista, text="Procesos y archivos simulados", style="Titulo.TLabel").grid(
+            row=0, column=0, columnspan=2, sticky="w", pady=(0, 8))
+        ttk.Label(
+            vista, style="Destacado.TLabel", justify="left", wraplength=620,
+            text="Esta versión incorpora las cuatro operaciones de procesos y las siete "
+                 "operaciones de archivos mediante una arquitectura por capas.").grid(
+                     row=1, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+
+        flujo = ttk.LabelFrame(vista, text="Recorrido de una solicitud", padding=10)
+        flujo.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        ttk.Label(
+            flujo, justify="left", wraplength=600,
+            text="GUI → Aplicación en modo usuario → System Call Interface → Kernel simulado "
+                 "→ Dispatcher → Gestor correspondiente → Resultado o error → Usuario").pack(
+                     anchor="w", fill="x")
+
+        procesos = ttk.LabelFrame(vista, text="Procesos simulados", padding=10)
+        procesos.grid(row=3, column=0, sticky="nsew", padx=(0, 6), pady=(0, 8))
+        ttk.Label(
+            procesos, justify="left", wraplength=280,
+            text="No son procesos de Windows. Finalizar conserva el registro y las consultas "
+                 "no cambian estados. No se implementa planificación real.").pack(
+                     anchor="nw", fill="both", expand=True)
+
+        archivos = ttk.LabelFrame(vista, text="Archivos confinados", padding=10)
+        archivos.grid(row=3, column=1, sticky="nsew", padx=(6, 0), pady=(0, 8))
+        ttk.Label(
+            archivos, justify="left", wraplength=280,
+            text="Permanecen bajo datos/archivos y sobreviven al cierre. Los descriptores son "
+                 "simulados y las aperturas duran solo durante la sesión.").pack(
+                     anchor="nw", fill="both", expand=True)
+
+        bitacora = ttk.LabelFrame(vista, text="Bitácora de la sesión", padding=10)
+        bitacora.grid(row=4, column=0, columnspan=2, sticky="ew")
+        ttk.Label(
+            bitacora, justify="left", wraplength=600,
+            text="Cada solicitud genera un evento final con su llamada, resultado, código y "
+                 "mensaje. La consulta de la bitácora es de solo lectura.").pack(
+                     anchor="w", fill="x")
 
     def _crear_procesos(self) -> None:
         vista = self._vista("Procesos")
         vista.columnconfigure(1, weight=1)
         vista.rowconfigure(7, weight=1)
-        ttk.Label(vista, text="Gestión de procesos", font=("Segoe UI", 14, "bold")).grid(
+        ttk.Label(vista, text="Gestión de procesos", style="Titulo.TLabel").grid(
             row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
 
         ttk.Label(vista, text="Nombre (1 a 50 caracteres)").grid(row=1, column=0, sticky="w", pady=6)
@@ -126,9 +172,9 @@ class Ventana:
     def _crear_archivos(self) -> None:
         vista = self._vista("Archivos")
         vista.columnconfigure(1, weight=1)
-        vista.rowconfigure(7, weight=1)
+        vista.rowconfigure(8, weight=1)
         ttk.Label(vista, text="Gestión de archivos confinados",
-                  font=("Segoe UI", 14, "bold")).grid(
+                  style="Titulo.TLabel").grid(
                       row=0, column=0, columnspan=3, sticky="w", pady=(0, 6))
 
         ttk.Label(vista, text="Nombre simple").grid(row=1, column=0, sticky="w", pady=4)
@@ -148,34 +194,39 @@ class Ventana:
         ttk.Entry(vista, textvariable=self.descriptor_archivo, width=12).grid(
             row=3, column=1, sticky="w", padx=8)
         acciones = ttk.Frame(vista)
-        acciones.grid(row=3, column=2, rowspan=2, sticky="n")
-        ttk.Button(acciones, text="Leer", command=self.leer_archivo).pack(fill="x", pady=1)
-        ttk.Button(acciones, text="Escribir", command=self.escribir_archivo).pack(fill="x", pady=1)
-        ttk.Button(acciones, text="Cerrar", command=self.cerrar_archivo).pack(fill="x", pady=1)
-        ttk.Button(acciones, text="Eliminar", command=self.eliminar_archivo).pack(fill="x", pady=1)
+        acciones.grid(row=4, column=0, columnspan=3, sticky="w", pady=2)
+        ttk.Button(acciones, text="Leer", command=self.leer_archivo).pack(
+            side="left", padx=(0, 5))
+        ttk.Button(acciones, text="Escribir", command=self.escribir_archivo).pack(
+            side="left", padx=5)
+        ttk.Button(acciones, text="Cerrar", command=self.cerrar_archivo).pack(
+            side="left", padx=5)
+        ttk.Button(acciones, text="Eliminar", command=self.eliminar_archivo).pack(
+            side="left", padx=5)
 
         ttk.Label(vista, text="Contenido (la escritura reemplaza todo)").grid(
-            row=4, column=0, columnspan=2, sticky="w", pady=(4, 0))
+            row=5, column=0, columnspan=3, sticky="w", pady=(4, 0))
         marco_texto = ttk.Frame(vista)
-        marco_texto.grid(row=5, column=0, columnspan=2, sticky="nsew", pady=4)
+        marco_texto.grid(row=6, column=0, columnspan=3, sticky="nsew", pady=4)
         marco_texto.columnconfigure(0, weight=1)
-        self.contenido_archivo = tk.Text(marco_texto, height=4, wrap="word", font=("Consolas", 10))
+        self.contenido_archivo = tk.Text(
+            marco_texto, width=50, height=2, wrap="word", font=("Consolas", 11))
         barra_texto = ttk.Scrollbar(marco_texto, orient="vertical", command=self.contenido_archivo.yview)
         self.contenido_archivo.configure(yscrollcommand=barra_texto.set)
         self.contenido_archivo.grid(row=0, column=0, sticky="nsew")
         barra_texto.grid(row=0, column=1, sticky="ns")
 
         barra_acciones = ttk.Frame(vista)
-        barra_acciones.grid(row=6, column=0, columnspan=3, sticky="ew", pady=3)
+        barra_acciones.grid(row=7, column=0, columnspan=3, sticky="ew", pady=3)
         ttk.Button(barra_acciones, text="Listar archivos", command=self.listar_archivos).pack(side="left")
         self.estado_tabla_archivos = tk.StringVar(
             value="Pulse Listar archivos para consultar el estado actual.")
         ttk.Label(barra_acciones, textvariable=self.estado_tabla_archivos).pack(side="left", padx=12)
 
         tabla = ttk.Frame(vista)
-        tabla.grid(row=7, column=0, columnspan=3, sticky="nsew")
+        tabla.grid(row=8, column=0, columnspan=3, sticky="nsew")
         self.archivos = ttk.Treeview(
-            tabla, columns=("nombre", "estado", "descriptor", "modo"), show="headings", height=4)
+            tabla, columns=("nombre", "estado", "descriptor", "modo"), show="headings", height=2)
         for columna, titulo, ancho in (("nombre", "Nombre", 250), ("estado", "Estado", 90),
                                       ("descriptor", "Descriptor", 90), ("modo", "Modo", 65)):
             self.archivos.heading(columna, text=titulo)
@@ -189,7 +240,7 @@ class Ventana:
     def _crear_bitacora(self) -> None:
         vista = self._vista("Bitácora")
         ttk.Label(vista, text="Bitácora de la sesión (solo lectura)",
-                  font=("Segoe UI", 14, "bold")).pack(anchor="w", pady=(0, 8))
+                  style="Titulo.TLabel").pack(anchor="w", pady=(0, 8))
 
         tabla = ttk.Frame(vista)
         tabla.pack(fill="both", expand=True)
@@ -209,7 +260,7 @@ class Ventana:
     def _texto_lectura(padre: ttk.Frame, alto: int) -> tk.Text:
         marco = ttk.Frame(padre)
         marco.pack(fill="both", expand=True)
-        texto = tk.Text(marco, height=alto, wrap="word", state="disabled", font=("Consolas", 10))
+        texto = tk.Text(marco, height=alto, wrap="word", state="disabled", font=("Consolas", 11))
         barra = ttk.Scrollbar(marco, orient="vertical", command=texto.yview)
         texto.configure(yscrollcommand=barra.set)
         texto.pack(side="left", fill="both", expand=True)
