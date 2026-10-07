@@ -16,47 +16,69 @@ class Ventana:
         raiz.title("Simulador de System Calls")
         raiz.geometry("1050x780")
         raiz.minsize(850, 700)
+        raiz.configure(background="#F3F5F7")
         raiz.columnconfigure(1, weight=1)
         raiz.rowconfigure(1, weight=1)
 
-        ttk.Label(raiz, text="Simulador de interfaz de llamadas al sistema",
-                  style="Encabezado.TLabel", padding=18).grid(
-                      row=0, column=0, columnspan=2, sticky="w")
+        encabezado = ttk.Frame(raiz, style="Header.TFrame", padding=(18, 16))
+        encabezado.grid(row=0, column=0, columnspan=2, sticky="ew")
+        ttk.Label(encabezado, text="Simulador de interfaz de llamadas al sistema",
+                  style="Encabezado.TLabel").pack(anchor="w")
 
-        lateral = ttk.Frame(raiz, padding=12)
-        lateral.grid(row=1, column=0, sticky="ns")
+        lateral = ttk.Frame(raiz, style="Sidebar.TFrame", padding=(12, 16))
+        lateral.grid(row=1, column=0, sticky="nsew")
+        lateral.columnconfigure(0, weight=1)
+        lateral.rowconfigure(2, weight=1)
 
-        self.contenido = ttk.Frame(raiz, padding=12)
+        self.botones_navegacion: dict[str, ttk.Button] = {}
+        boton_inicio = ttk.Button(
+            lateral, text="Inicio", style="ActiveNavigation.TButton",
+            command=lambda: self.mostrar("Inicio"))
+        boton_inicio.grid(row=0, column=0, sticky="ew")
+        self.botones_navegacion["Inicio"] = boton_inicio
+
+        grupo_navegacion = ttk.Frame(lateral, style="Sidebar.TFrame")
+        grupo_navegacion.grid(row=1, column=0, sticky="ew", pady=(28, 0))
+        grupo_navegacion.columnconfigure(0, weight=1)
+        for fila, nombre in enumerate(("Procesos", "Archivos", "Bitácora")):
+            boton = ttk.Button(
+                grupo_navegacion, text=nombre, style="Navigation.TButton",
+                command=lambda n=nombre: self.mostrar(n))
+            boton.grid(row=fila, column=0, sticky="ew", pady=(0, 10))
+            self.botones_navegacion[nombre] = boton
+
+        ttk.Button(
+            lateral, text="Salir", style="Exit.TButton", command=raiz.destroy).grid(
+                row=3, column=0, sticky="ew", pady=(24, 0))
+
+        self.contenido = ttk.Frame(raiz, style="App.TFrame", padding=12)
         self.contenido.grid(row=1, column=1, sticky="nsew")
         self.contenido.columnconfigure(0, weight=1)
         self.contenido.rowconfigure(0, weight=1)
         self.vistas: dict[str, ttk.Frame] = {}
-
-        for nombre in ("Inicio", "Procesos", "Archivos", "Bitácora"):
-            ttk.Button(lateral, text=nombre, command=lambda n=nombre: self.mostrar(n)).pack(
-                fill="x", pady=5)
-
-        ttk.Button(lateral, text="Salir", command=raiz.destroy).pack(fill="x", pady=20)
 
         self._crear_inicio()
         self._crear_procesos()
         self._crear_archivos()
         self._crear_bitacora()
 
-        panel_inferior = ttk.Frame(raiz, padding=(12, 5, 12, 12))
+        panel_inferior = ttk.Frame(
+            raiz, style="App.TFrame", padding=(12, 5, 12, 12))
         panel_inferior.grid(row=2, column=0, columnspan=2, sticky="nsew")
         panel_inferior.columnconfigure(0, weight=2)
         panel_inferior.columnconfigure(1, weight=3)
 
         panel_resultado = ttk.LabelFrame(
-            panel_inferior, text="Resultado de la última llamada", padding=8)
+            panel_inferior, text="Resultado de la última llamada",
+            style="Output.TLabelframe", padding=8)
         panel_resultado.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
         self.resultado = self._texto_lectura(panel_resultado, 7)
         self._poner_texto(self.resultado, "Todavía no se ha enviado ninguna solicitud.")
 
         panel_recorrido = ttk.LabelFrame(
             panel_inferior,
-            text="Recorrido conceptual — no cambia privilegios del procesador", padding=8)
+            text="Recorrido conceptual — no cambia privilegios del procesador",
+            style="Output.TLabelframe", padding=8)
         panel_recorrido.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         self.recorrido = self._texto_lectura(panel_recorrido, 7)
         self._poner_texto(self.recorrido, "El recorrido aparecerá después de una llamada.")
@@ -65,19 +87,88 @@ class Ventana:
     def _configurar_estilos(self) -> None:
         """Aplica una escala legible y uniforme sin alterar la lógica de la GUI."""
         estilo = ttk.Style(self.raiz)
-        estilo.configure("TLabel", font=("Segoe UI", 11))
-        estilo.configure("TButton", font=("Segoe UI", 11), padding=(12, 7))
-        estilo.configure("TEntry", font=("Segoe UI", 11), padding=5)
-        estilo.configure("TCombobox", font=("Segoe UI", 11), padding=4)
-        estilo.configure("TLabelframe.Label", font=("Segoe UI", 11, "bold"))
-        estilo.configure("Treeview", font=("Segoe UI", 10), rowheight=27)
-        estilo.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
-        estilo.configure("Encabezado.TLabel", font=("Segoe UI", 18, "bold"))
-        estilo.configure("Titulo.TLabel", font=("Segoe UI", 16, "bold"))
-        estilo.configure("Destacado.TLabel", font=("Segoe UI", 11, "bold"))
+        if "clam" in estilo.theme_names():
+            estilo.theme_use("clam")
+
+        fondo = "#F3F5F7"
+        blanco = "#FFFFFF"
+        principal = "#244A6A"
+        secundario = "#3F6685"
+        borde = "#D8DEE5"
+        texto = "#20252B"
+        texto_secundario = "#59636E"
+        salir = "#A94B4B"
+
+        estilo.configure("App.TFrame", background=fondo)
+        estilo.configure("Sidebar.TFrame", background="#E8EDF2")
+        estilo.configure("Header.TFrame", background=blanco)
+        estilo.configure("Card.TFrame", background=blanco)
+
+        estilo.configure("TLabel", background=fondo, foreground=texto,
+                         font=("Segoe UI", 11))
+        estilo.configure("Encabezado.TLabel", background=blanco, foreground=texto,
+                         font=("Segoe UI", 18, "bold"))
+        estilo.configure("Titulo.TLabel", background=fondo, foreground=principal,
+                         font=("Segoe UI", 16, "bold"))
+        estilo.configure("Destacado.TLabel", background=fondo, foreground=texto_secundario,
+                         font=("Segoe UI", 11))
+        estilo.configure("CardBody.TLabel", background=blanco, foreground=texto_secundario,
+                         font=("Segoe UI", 11))
+
+        estilo.configure("TButton", background=blanco, foreground=texto,
+                         bordercolor=borde, lightcolor=borde, darkcolor=borde,
+                         font=("Segoe UI", 11), padding=(12, 7), relief="flat")
+        estilo.map("TButton", background=[("active", "#E7EDF2")],
+                   bordercolor=[("focus", secundario)])
+        estilo.configure("Navigation.TButton", background=blanco, foreground=texto,
+                         bordercolor=borde, lightcolor=borde, darkcolor=borde,
+                         font=("Segoe UI", 11), padding=(12, 8), relief="flat")
+        estilo.map("Navigation.TButton",
+                   background=[("active", "#DDE7EF")],
+                   foreground=[("active", principal)])
+        estilo.configure("ActiveNavigation.TButton", background=principal,
+                         foreground=blanco, bordercolor=principal,
+                         lightcolor=principal, darkcolor=principal,
+                         font=("Segoe UI", 11, "bold"), padding=(12, 8), relief="flat")
+        estilo.map("ActiveNavigation.TButton",
+                   background=[("active", secundario)],
+                   foreground=[("active", blanco)])
+        estilo.configure("Exit.TButton", background=blanco, foreground=salir,
+                         bordercolor=borde, lightcolor=borde, darkcolor=borde,
+                         font=("Segoe UI", 11), padding=(12, 8), relief="flat")
+        estilo.map("Exit.TButton", background=[("active", "#F4E8E8")],
+                   foreground=[("active", "#843B3B")])
+
+        estilo.configure("TEntry", fieldbackground=blanco, foreground=texto,
+                         bordercolor=borde, insertcolor=texto,
+                         font=("Segoe UI", 11), padding=5)
+        estilo.configure("TCombobox", fieldbackground=blanco, background=blanco,
+                         foreground=texto, bordercolor=borde, arrowcolor=principal,
+                         font=("Segoe UI", 11), padding=4)
+
+        estilo.configure("TLabelframe", background=fondo, bordercolor=borde,
+                         lightcolor=borde, darkcolor=borde, relief="solid")
+        estilo.configure("TLabelframe.Label", background=fondo, foreground=texto,
+                         font=("Segoe UI", 11, "bold"))
+        estilo.configure("Card.TLabelframe", background=blanco, bordercolor=borde,
+                         lightcolor=borde, darkcolor=borde, relief="solid")
+        estilo.configure("Card.TLabelframe.Label", background=blanco,
+                         foreground=principal, font=("Segoe UI", 11, "bold"))
+        estilo.configure("Output.TLabelframe", background=blanco, bordercolor=borde,
+                         lightcolor=borde, darkcolor=borde, relief="solid")
+        estilo.configure("Output.TLabelframe.Label", background=blanco,
+                         foreground=principal, font=("Segoe UI", 11, "bold"))
+
+        estilo.configure("Treeview", background=blanco, fieldbackground=blanco,
+                         foreground=texto, bordercolor=borde,
+                         font=("Segoe UI", 10), rowheight=27)
+        estilo.configure("Treeview.Heading", background="#E8EDF2", foreground=principal,
+                         bordercolor=borde, font=("Segoe UI", 10, "bold"))
+        estilo.map("Treeview", background=[("selected", secundario)],
+                   foreground=[("selected", blanco)])
 
     def _vista(self, nombre: str) -> ttk.Frame:
-        vista = ttk.Frame(self.contenido)
+        vista = ttk.Frame(self.contenido, style="App.TFrame")
         self.vistas[nombre] = vista
         return vista
 
@@ -95,34 +186,38 @@ class Ventana:
                  "operaciones de archivos mediante una arquitectura por capas.").grid(
                      row=1, column=0, columnspan=2, sticky="ew", pady=(0, 8))
 
-        flujo = ttk.LabelFrame(vista, text="Recorrido de una solicitud", padding=10)
+        flujo = ttk.LabelFrame(
+            vista, text="Recorrido de una solicitud", style="Card.TLabelframe", padding=8)
         flujo.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
         ttk.Label(
-            flujo, justify="left", wraplength=600,
+            flujo, style="CardBody.TLabel", justify="left", wraplength=600,
             text="GUI → Aplicación en modo usuario → System Call Interface → Kernel simulado "
                  "→ Dispatcher → Gestor correspondiente → Resultado o error → Usuario").pack(
                      anchor="w", fill="x")
 
-        procesos = ttk.LabelFrame(vista, text="Procesos simulados", padding=10)
+        procesos = ttk.LabelFrame(
+            vista, text="Procesos simulados", style="Card.TLabelframe", padding=8)
         procesos.grid(row=3, column=0, sticky="nsew", padx=(0, 6), pady=(0, 8))
         ttk.Label(
-            procesos, justify="left", wraplength=280,
+            procesos, style="CardBody.TLabel", justify="left", wraplength=280,
             text="No son procesos de Windows. Finalizar conserva el registro y las consultas "
                  "no cambian estados. No se implementa planificación real.").pack(
                      anchor="nw", fill="both", expand=True)
 
-        archivos = ttk.LabelFrame(vista, text="Archivos confinados", padding=10)
+        archivos = ttk.LabelFrame(
+            vista, text="Archivos confinados", style="Card.TLabelframe", padding=8)
         archivos.grid(row=3, column=1, sticky="nsew", padx=(6, 0), pady=(0, 8))
         ttk.Label(
-            archivos, justify="left", wraplength=280,
+            archivos, style="CardBody.TLabel", justify="left", wraplength=280,
             text="Permanecen bajo datos/archivos y sobreviven al cierre. Los descriptores son "
                  "simulados y las aperturas duran solo durante la sesión.").pack(
                      anchor="nw", fill="both", expand=True)
 
-        bitacora = ttk.LabelFrame(vista, text="Bitácora de la sesión", padding=10)
+        bitacora = ttk.LabelFrame(
+            vista, text="Bitácora de la sesión", style="Card.TLabelframe", padding=8)
         bitacora.grid(row=4, column=0, columnspan=2, sticky="ew")
         ttk.Label(
-            bitacora, justify="left", wraplength=600,
+            bitacora, style="CardBody.TLabel", justify="left", wraplength=600,
             text="Cada solicitud genera un evento final con su llamada, resultado, código y "
                  "mensaje. La consulta de la bitácora es de solo lectura.").pack(
                      anchor="w", fill="x")
@@ -258,9 +353,12 @@ class Ventana:
 
     @staticmethod
     def _texto_lectura(padre: ttk.Frame, alto: int) -> tk.Text:
-        marco = ttk.Frame(padre)
+        marco = ttk.Frame(padre, style="Card.TFrame")
         marco.pack(fill="both", expand=True)
-        texto = tk.Text(marco, height=alto, wrap="word", state="disabled", font=("Consolas", 11))
+        texto = tk.Text(
+            marco, height=alto, wrap="word", state="disabled", font=("Consolas", 11),
+            background="#F8FAFC", foreground="#20252B", relief="flat", borderwidth=0,
+            highlightthickness=1, highlightbackground="#D8DEE5", padx=8)
         barra = ttk.Scrollbar(marco, orient="vertical", command=texto.yview)
         texto.configure(yscrollcommand=barra.set)
         texto.pack(side="left", fill="both", expand=True)
@@ -278,6 +376,9 @@ class Ventana:
         for vista in self.vistas.values():
             vista.grid_forget()
         self.vistas[nombre].grid(row=0, column=0, sticky="nsew")
+        for seccion, boton in self.botones_navegacion.items():
+            boton.configure(style=(
+                "ActiveNavigation.TButton" if seccion == nombre else "Navigation.TButton"))
         if nombre == "Bitácora":
             self.actualizar_bitacora()
 
