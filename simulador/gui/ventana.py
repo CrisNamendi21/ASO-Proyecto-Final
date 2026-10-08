@@ -110,6 +110,8 @@ class Ventana:
                          font=("Segoe UI", 18, "bold"))
         estilo.configure("Titulo.TLabel", background=fondo, foreground=principal,
                          font=("Segoe UI", 16, "bold"))
+        estilo.configure("Subtitulo.TLabel", background=fondo, foreground=principal,
+                         font=("Segoe UI", 11, "bold"))
         estilo.configure("Destacado.TLabel", background=fondo, foreground=texto_secundario,
                          font=("Segoe UI", 11))
         estilo.configure("CardBody.TLabel", background=blanco, foreground=texto_secundario,
@@ -440,22 +442,34 @@ class Ventana:
 
     def _crear_bitacora(self) -> None:
         vista = self._vista("Bitácora")
+        vista.columnconfigure(0, weight=1)
+        vista.rowconfigure(1, weight=3)
+        vista.rowconfigure(3, weight=2)
         ttk.Label(vista, text="Bitácora de la sesión (solo lectura)",
-                  style="Titulo.TLabel").pack(anchor="w", pady=(0, 8))
+                  style="Titulo.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 8))
 
-        tabla = ttk.Frame(vista)
-        tabla.pack(fill="both", expand=True)
+        tabla = ttk.Frame(vista, style="Card.TFrame", padding=8)
+        tabla.grid(row=1, column=0, sticky="nsew", pady=(0, 12))
         columnas = ("evento", "hora", "llamada", "estado", "codigo")
-        self.eventos = ttk.Treeview(tabla, columns=columnas, show="headings", height=5)
-        for columna, ancho in zip(columnas, (55, 175, 145, 70, 80)):
-            self.eventos.heading(columna, text=columna.capitalize())
-            self.eventos.column(columna, width=ancho, minwidth=45)
+        titulos = ("Evento", "Hora", "Llamada", "Estado", "Código")
+        self.eventos = ttk.Treeview(tabla, columns=columnas, show="headings", height=4)
+        for columna, titulo, ancho in zip(columnas, titulos, (55, 210, 170, 80, 100)):
+            self.eventos.heading(columna, text=titulo)
+            ancla = "center" if columna in {"evento", "estado", "codigo"} else "w"
+            self.eventos.column(columna, width=ancho, minwidth=45, anchor=ancla)
         barra = ttk.Scrollbar(tabla, orient="vertical", command=self.eventos.yview)
         self.eventos.configure(yscrollcommand=barra.set)
         self.eventos.pack(side="left", fill="both", expand=True)
         barra.pack(side="right", fill="y")
         self.eventos.bind("<<TreeviewSelect>>", self.mostrar_evento)
-        self.detalle = self._texto_lectura(vista, 7)
+
+        ttk.Label(
+            vista, text="Detalle del evento seleccionado", style="Subtitulo.TLabel").grid(
+                row=2, column=0, sticky="w", pady=(0, 6))
+        detalle = ttk.Frame(vista, style="Card.TFrame", padding=8)
+        detalle.grid(row=3, column=0, sticky="nsew")
+        self.detalle = self._texto_lectura(detalle, 5)
+        self.detalle.configure(width=50)
 
     @staticmethod
     def _texto_lectura(padre: ttk.Frame, alto: int) -> tk.Text:
