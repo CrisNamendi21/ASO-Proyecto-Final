@@ -275,11 +275,6 @@ class Ventana:
         registrados.columnconfigure(1, weight=1)
         registrados.rowconfigure(4, weight=1)
 
-        ttk.Button(
-            registrados, text="Listar procesos", style="Secondary.TButton",
-            command=self.listar_procesos).grid(
-                row=0, column=2, sticky="e", pady=(0, 6))
-
         ttk.Label(
             registrados, text="PID (escriba o seleccione una fila)",
             style="CardBody.TLabel").grid(row=1, column=0, sticky="w", pady=4)
@@ -288,13 +283,16 @@ class Ventana:
             row=1, column=1, sticky="w", padx=(20, 0), pady=4)
 
         acciones = ttk.Frame(registrados, style="Card.TFrame")
-        acciones.grid(row=2, column=0, columnspan=3, sticky="w", pady=(4, 6))
+        acciones.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(4, 6))
         ttk.Button(
             acciones, text="Consultar proceso", style="Secondary.TButton",
             command=self.consultar_proceso).pack(side="left", padx=(0, 8))
         ttk.Button(
             acciones, text="Finalizar proceso", style="Danger.TButton",
             command=self.finalizar_proceso).pack(side="left")
+        ttk.Button(
+            acciones, text="Listar procesos", style="Secondary.TButton",
+            command=self.listar_procesos).pack(side="right")
 
         self.estado_tabla = tk.StringVar(value="Pulse Listar procesos para consultar el estado actual.")
         ttk.Label(
@@ -317,60 +315,117 @@ class Ventana:
 
     def _crear_archivos(self) -> None:
         vista = self._vista("Archivos")
-        vista.columnconfigure(1, weight=1)
-        vista.rowconfigure(8, weight=1)
+        vista.columnconfigure(0, weight=1)
+        vista.rowconfigure(2, weight=1)
+        vista.rowconfigure(3, weight=4)
         ttk.Label(vista, text="Gestión de archivos confinados",
                   style="Titulo.TLabel").grid(
-                      row=0, column=0, columnspan=3, sticky="w", pady=(0, 6))
+                      row=0, column=0, sticky="w", pady=(0, 4))
 
-        ttk.Label(vista, text="Nombre simple").grid(row=1, column=0, sticky="w", pady=4)
+        superior = ttk.Frame(vista, style="App.TFrame")
+        superior.grid(row=1, column=0, sticky="ew", pady=(0, 4))
+        superior.columnconfigure(0, weight=1, uniform="archivos_superior")
+        superior.columnconfigure(1, weight=1, uniform="archivos_superior")
+
+        archivo = ttk.LabelFrame(
+            superior, text="Archivo", style="Card.TLabelframe", padding=(8, 4))
+        archivo.grid(row=0, column=0, sticky="nsew", padx=(0, 3))
+        archivo.columnconfigure(1, weight=1)
+
+        ttk.Label(archivo, text="Nombre simple", style="CardBody.TLabel").grid(
+            row=0, column=0, sticky="w", pady=3)
         self.nombre_archivo = tk.StringVar()
-        ttk.Entry(vista, textvariable=self.nombre_archivo, width=32).grid(
-            row=1, column=1, sticky="ew", padx=8)
-        ttk.Button(vista, text="Crear", command=self.crear_archivo).grid(row=1, column=2)
+        ttk.Entry(archivo, textvariable=self.nombre_archivo, width=26).grid(
+            row=0, column=1, sticky="ew", padx=(12, 0), pady=2)
 
-        ttk.Label(vista, text="Modo").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(archivo, text="Modo", style="CardBody.TLabel").grid(
+            row=1, column=0, sticky="w", pady=3)
         self.modo_archivo = tk.StringVar(value="rw")
-        ttk.Combobox(vista, textvariable=self.modo_archivo, values=("r", "w", "rw"),
-                     state="readonly", width=8).grid(row=2, column=1, sticky="w", padx=8)
-        ttk.Button(vista, text="Abrir", command=self.abrir_archivo).grid(row=2, column=2)
+        ttk.Combobox(
+            archivo, textvariable=self.modo_archivo, values=("r", "w", "rw"),
+            state="readonly", width=9).grid(
+                row=1, column=1, sticky="w", padx=(12, 0), pady=2)
 
-        ttk.Label(vista, text="Descriptor").grid(row=3, column=0, sticky="w", pady=4)
+        acciones_archivo = ttk.Frame(archivo, style="Card.TFrame")
+        acciones_archivo.grid(
+            row=2, column=1, sticky="w", padx=(12, 0), pady=(4, 0))
+        ttk.Button(
+            acciones_archivo, text="Crear", style="Primary.TButton",
+            command=self.crear_archivo, width=7, padding=(9, 5)).pack(
+                side="left", padx=(0, 8))
+        ttk.Button(
+            acciones_archivo, text="Abrir", style="Secondary.TButton",
+            command=self.abrir_archivo, width=7, padding=(9, 5)).pack(side="left")
+
+        operaciones = ttk.LabelFrame(
+            superior, text="Operaciones mediante descriptor",
+            style="Card.TLabelframe", padding=(8, 4))
+        operaciones.grid(row=0, column=1, sticky="nsew", padx=(3, 0))
+        operaciones.columnconfigure(1, weight=1)
+
+        ttk.Label(operaciones, text="Descriptor", style="CardBody.TLabel").grid(
+            row=0, column=0, sticky="w", pady=3)
         self.descriptor_archivo = tk.StringVar()
-        ttk.Entry(vista, textvariable=self.descriptor_archivo, width=12).grid(
-            row=3, column=1, sticky="w", padx=8)
-        acciones = ttk.Frame(vista)
-        acciones.grid(row=4, column=0, columnspan=3, sticky="w", pady=2)
-        ttk.Button(acciones, text="Leer", command=self.leer_archivo).pack(
-            side="left", padx=(0, 5))
-        ttk.Button(acciones, text="Escribir", command=self.escribir_archivo).pack(
-            side="left", padx=5)
-        ttk.Button(acciones, text="Cerrar", command=self.cerrar_archivo).pack(
-            side="left", padx=5)
-        ttk.Button(acciones, text="Eliminar", command=self.eliminar_archivo).pack(
-            side="left", padx=5)
+        ttk.Entry(operaciones, textvariable=self.descriptor_archivo, width=13).grid(
+            row=0, column=1, sticky="w", padx=(12, 8), pady=2)
+        ttk.Button(
+            operaciones, text="Eliminar", style="Danger.TButton",
+            command=self.eliminar_archivo, width=7, padding=(9, 5)).grid(
+                row=0, column=2, sticky="e", pady=2)
 
-        ttk.Label(vista, text="Contenido (la escritura reemplaza todo)").grid(
-            row=5, column=0, columnspan=3, sticky="w", pady=(4, 0))
-        marco_texto = ttk.Frame(vista)
-        marco_texto.grid(row=6, column=0, columnspan=3, sticky="nsew", pady=4)
+        acciones = ttk.Frame(operaciones, style="Card.TFrame")
+        acciones.grid(row=1, column=0, columnspan=3, sticky="w", pady=(4, 0))
+        ttk.Button(
+            acciones, text="Leer", style="Secondary.TButton",
+            command=self.leer_archivo, width=6, padding=(8, 5)).pack(
+                side="left", padx=(0, 8))
+        ttk.Button(
+            acciones, text="Escribir", style="Secondary.TButton",
+            command=self.escribir_archivo, width=7, padding=(8, 5)).pack(
+                side="left", padx=(0, 8))
+        ttk.Button(
+            acciones, text="Cerrar", style="Secondary.TButton",
+            command=self.cerrar_archivo, width=6, padding=(8, 5)).pack(side="left")
+
+        contenido = ttk.LabelFrame(
+            vista, text="Contenido (la escritura reemplaza todo)",
+            style="Card.TLabelframe", padding=8)
+        contenido.grid(row=2, column=0, sticky="nsew", pady=(0, 4))
+        contenido.columnconfigure(0, weight=1)
+        contenido.rowconfigure(0, weight=1)
+
+        marco_texto = ttk.Frame(contenido, style="Card.TFrame")
+        marco_texto.grid(row=0, column=0, sticky="nsew")
         marco_texto.columnconfigure(0, weight=1)
+        marco_texto.rowconfigure(0, weight=1)
         self.contenido_archivo = tk.Text(
-            marco_texto, width=50, height=2, wrap="word", font=("Consolas", 11))
+            marco_texto, width=50, height=2, wrap="word", font=("Consolas", 11),
+            background="#F8FAFC", foreground="#20252B", relief="flat", borderwidth=0,
+            highlightthickness=1, highlightbackground="#D8DEE5", padx=8, pady=6)
         barra_texto = ttk.Scrollbar(marco_texto, orient="vertical", command=self.contenido_archivo.yview)
         self.contenido_archivo.configure(yscrollcommand=barra_texto.set)
         self.contenido_archivo.grid(row=0, column=0, sticky="nsew")
         barra_texto.grid(row=0, column=1, sticky="ns")
 
-        barra_acciones = ttk.Frame(vista)
-        barra_acciones.grid(row=7, column=0, columnspan=3, sticky="ew", pady=3)
-        ttk.Button(barra_acciones, text="Listar archivos", command=self.listar_archivos).pack(side="left")
+        registrados = ttk.LabelFrame(
+            vista, text="Archivos registrados", style="Card.TLabelframe", padding=8)
+        registrados.grid(row=3, column=0, sticky="nsew")
+        registrados.columnconfigure(0, weight=1)
+        registrados.rowconfigure(1, weight=1)
+
+        barra_acciones = ttk.Frame(registrados, style="Card.TFrame")
+        barra_acciones.grid(row=0, column=0, sticky="ew", pady=(0, 4))
+        ttk.Button(
+            barra_acciones, text="Listar archivos", style="Secondary.TButton",
+            command=self.listar_archivos).pack(side="right")
         self.estado_tabla_archivos = tk.StringVar(
             value="Pulse Listar archivos para consultar el estado actual.")
-        ttk.Label(barra_acciones, textvariable=self.estado_tabla_archivos).pack(side="left", padx=12)
+        ttk.Label(
+            barra_acciones, textvariable=self.estado_tabla_archivos,
+            style="CardHint.TLabel").pack(side="left")
 
-        tabla = ttk.Frame(vista)
-        tabla.grid(row=8, column=0, columnspan=3, sticky="nsew")
+        tabla = ttk.Frame(registrados, style="Card.TFrame")
+        tabla.grid(row=1, column=0, sticky="nsew")
         self.archivos = ttk.Treeview(
             tabla, columns=("nombre", "estado", "descriptor", "modo"), show="headings", height=2)
         for columna, titulo, ancho in (("nombre", "Nombre", 250), ("estado", "Estado", 90),
