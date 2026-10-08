@@ -72,7 +72,7 @@ class Ventana:
             panel_inferior, text="Resultado de la última llamada",
             style="Output.TLabelframe", padding=8)
         panel_resultado.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
-        self.resultado = self._texto_lectura(panel_resultado, 7)
+        self.resultado = self._texto_lectura(panel_resultado, 5)
         self._poner_texto(self.resultado, "Todavía no se ha enviado ninguna solicitud.")
 
         panel_recorrido = ttk.LabelFrame(
@@ -80,7 +80,7 @@ class Ventana:
             text="Recorrido conceptual — no cambia privilegios del procesador",
             style="Output.TLabelframe", padding=8)
         panel_recorrido.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
-        self.recorrido = self._texto_lectura(panel_recorrido, 7)
+        self.recorrido = self._texto_lectura(panel_recorrido, 5)
         self._poner_texto(self.recorrido, "El recorrido aparecerá después de una llamada.")
         self.mostrar("Inicio")
 
@@ -114,6 +114,8 @@ class Ventana:
                          font=("Segoe UI", 11))
         estilo.configure("CardBody.TLabel", background=blanco, foreground=texto_secundario,
                          font=("Segoe UI", 11))
+        estilo.configure("CardHint.TLabel", background=blanco, foreground=texto_secundario,
+                         font=("Segoe UI", 10))
 
         estilo.configure("TButton", background=blanco, foreground=texto,
                          bordercolor=borde, lightcolor=borde, darkcolor=borde,
@@ -137,6 +139,20 @@ class Ventana:
                          bordercolor=borde, lightcolor=borde, darkcolor=borde,
                          font=("Segoe UI", 11), padding=(12, 8), relief="flat")
         estilo.map("Exit.TButton", background=[("active", "#F4E8E8")],
+                   foreground=[("active", "#843B3B")])
+        estilo.configure("Primary.TButton", background=principal, foreground=blanco,
+                         bordercolor=principal, lightcolor=principal, darkcolor=principal,
+                         font=("Segoe UI", 11, "bold"), padding=(14, 8), relief="flat")
+        estilo.map("Primary.TButton", background=[("active", secundario)],
+                   foreground=[("active", blanco)])
+        estilo.configure("Secondary.TButton", background="#E8F0F6", foreground=principal,
+                         bordercolor="#B8C8D5", lightcolor="#B8C8D5", darkcolor="#B8C8D5",
+                         font=("Segoe UI", 11), padding=(12, 7), relief="flat")
+        estilo.map("Secondary.TButton", background=[("active", "#D5E3ED")])
+        estilo.configure("Danger.TButton", background=blanco, foreground=salir,
+                         bordercolor="#D8BDBD", lightcolor="#D8BDBD", darkcolor="#D8BDBD",
+                         font=("Segoe UI", 11), padding=(12, 7), relief="flat")
+        estilo.map("Danger.TButton", background=[("active", "#F4E8E8")],
                    foreground=[("active", "#843B3B")])
 
         estilo.configure("TEntry", fieldbackground=blanco, foreground=texto,
@@ -224,36 +240,71 @@ class Ventana:
 
     def _crear_procesos(self) -> None:
         vista = self._vista("Procesos")
-        vista.columnconfigure(1, weight=1)
-        vista.rowconfigure(7, weight=1)
+        vista.columnconfigure(0, weight=1)
+        vista.rowconfigure(2, weight=1)
         ttk.Label(vista, text="Gestión de procesos", style="Titulo.TLabel").grid(
-            row=0, column=0, columnspan=2, sticky="w", pady=(0, 6))
+            row=0, column=0, sticky="w", pady=(0, 6))
 
-        ttk.Label(vista, text="Nombre (1 a 50 caracteres)").grid(row=1, column=0, sticky="w", pady=6)
+        nuevo = ttk.LabelFrame(
+            vista, text="Nuevo proceso", style="Card.TLabelframe", padding=8)
+        nuevo.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        nuevo.columnconfigure(1, weight=1)
+
+        ttk.Label(
+            nuevo, text="Nombre (1 a 50 caracteres)", style="CardBody.TLabel").grid(
+                row=0, column=0, sticky="w", pady=4)
         self.nombre = tk.StringVar()
-        self.entrada_nombre = ttk.Entry(vista, textvariable=self.nombre, width=40)
-        self.entrada_nombre.grid(row=1, column=1, padx=12)
-        ttk.Label(vista, text="Prioridad (1 baja · 5 alta)").grid(row=2, column=0, sticky="w", pady=6)
+        self.entrada_nombre = ttk.Entry(nuevo, textvariable=self.nombre, width=32)
+        self.entrada_nombre.grid(row=0, column=1, sticky="w", padx=(20, 8), pady=4)
+        ttk.Label(
+            nuevo, text="Prioridad (1 baja · 5 alta)", style="CardBody.TLabel").grid(
+                row=1, column=0, sticky="w", pady=4)
         self.prioridad = tk.StringVar(value="3")
-        ttk.Combobox(vista, textvariable=self.prioridad, values=(1, 2, 3, 4, 5),
-                     state="readonly", width=10).grid(row=2, column=1, sticky="w", padx=12)
-        ttk.Button(vista, text="Crear proceso", command=self.crear_proceso).grid(
-            row=3, column=0, sticky="w", pady=6)
-        ttk.Button(vista, text="Listar procesos", command=self.listar_procesos).grid(
-            row=3, column=1, sticky="w", padx=12)
-        ttk.Label(vista, text="PID (escriba o seleccione una fila)").grid(row=4, column=0, sticky="w")
+        ttk.Combobox(
+            nuevo, textvariable=self.prioridad, values=(1, 2, 3, 4, 5),
+            state="readonly", width=10).grid(
+                row=1, column=1, sticky="w", padx=(20, 8), pady=4)
+        ttk.Button(
+            nuevo, text="Crear proceso", style="Primary.TButton",
+            command=self.crear_proceso).grid(
+                row=0, column=2, rowspan=2, sticky="e", padx=(12, 0))
+
+        registrados = ttk.LabelFrame(
+            vista, text="Procesos registrados", style="Card.TLabelframe", padding=8)
+        registrados.grid(row=2, column=0, sticky="nsew")
+        registrados.columnconfigure(1, weight=1)
+        registrados.rowconfigure(4, weight=1)
+
+        ttk.Button(
+            registrados, text="Listar procesos", style="Secondary.TButton",
+            command=self.listar_procesos).grid(
+                row=0, column=2, sticky="e", pady=(0, 6))
+
+        ttk.Label(
+            registrados, text="PID (escriba o seleccione una fila)",
+            style="CardBody.TLabel").grid(row=1, column=0, sticky="w", pady=4)
         self.pid = tk.StringVar()
-        ttk.Entry(vista, textvariable=self.pid, width=15).grid(row=4, column=1, sticky="w", padx=12)
-        ttk.Button(vista, text="Consultar proceso", command=self.consultar_proceso).grid(
-            row=5, column=0, sticky="w", pady=6)
-        ttk.Button(vista, text="Finalizar proceso", command=self.finalizar_proceso).grid(
-            row=5, column=1, sticky="w", padx=12)
+        ttk.Entry(registrados, textvariable=self.pid, width=15).grid(
+            row=1, column=1, sticky="w", padx=(20, 0), pady=4)
+
+        acciones = ttk.Frame(registrados, style="Card.TFrame")
+        acciones.grid(row=2, column=0, columnspan=3, sticky="w", pady=(4, 6))
+        ttk.Button(
+            acciones, text="Consultar proceso", style="Secondary.TButton",
+            command=self.consultar_proceso).pack(side="left", padx=(0, 8))
+        ttk.Button(
+            acciones, text="Finalizar proceso", style="Danger.TButton",
+            command=self.finalizar_proceso).pack(side="left")
+
         self.estado_tabla = tk.StringVar(value="Pulse Listar procesos para consultar el estado actual.")
-        ttk.Label(vista, textvariable=self.estado_tabla).grid(row=6, column=0, columnspan=2, sticky="w")
-        tabla = ttk.Frame(vista)
-        tabla.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=4)
+        ttk.Label(
+            registrados, textvariable=self.estado_tabla, style="CardHint.TLabel").grid(
+                row=3, column=0, columnspan=3, sticky="w", pady=(0, 6))
+
+        tabla = ttk.Frame(registrados, style="Card.TFrame")
+        tabla.grid(row=4, column=0, columnspan=3, sticky="nsew")
         self.procesos = ttk.Treeview(tabla, columns=("pid", "nombre", "estado", "prioridad"),
-                                    show="headings", height=4)
+                                    show="headings", height=2)
         for columna, titulo, ancho in (("pid", "PID", 65), ("nombre", "Nombre", 260),
                                       ("estado", "Estado", 110), ("prioridad", "Prioridad", 80)):
             self.procesos.heading(columna, text=titulo)
