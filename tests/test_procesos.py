@@ -1,4 +1,4 @@
-"""CP-02–CP-04, CE-02–CE-03 e invariantes de procesos del incremento 2."""
+"""CP-02–CP-04, CE-02–CE-03 e invariantes de procesos."""
 
 from contextlib import ExitStack
 from dataclasses import replace
@@ -126,7 +126,7 @@ class IntegracionProcesos(unittest.TestCase):
 
     def test_ejecutando_interno_consultas_no_mutan_y_finalizacion_valida(self):
         proceso = self.crear()
-        # Preparación interna permitida solo en pruebas; DEC-001 no activa ejecución en GUI.
+        # La prueba prepara Ejecutando mediante el gestor; la GUI no lo activa.
         self.gestor._cambiar_estado(101, EstadoProceso.EJECUTANDO)
         proceso["estado"] = "Ejecutando"
         self.llamada("get_process", {"pid": 101}, "PROC-03", {"proceso": proceso})

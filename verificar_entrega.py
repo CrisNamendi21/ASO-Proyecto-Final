@@ -20,7 +20,6 @@ ARCHIVOS_REQUERIDOS = (
     "GUIA_DEFENSA.md",
     "ENTREGA_FINAL.md",
     "MANIFIESTO_ENTREGA.md",
-    "AGENTS.md",
     "docs/Proyecto Arquitectura de sistemas operativos.docx",
     "docs/Propuesta #7.pdf",
 )

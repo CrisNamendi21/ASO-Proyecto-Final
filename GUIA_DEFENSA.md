@@ -34,7 +34,7 @@ explícito. Los gestores son los únicos dueños del estado de procesos y archiv
 ## Preguntas probables
 
 **¿Por qué no hay scheduler?** La prioridad es informativa. El diseño no exige un
-scheduler y se decidió no inventar uno. El estado Ejecutando se controla internamente
+scheduler. El estado Ejecutando se controla internamente
 y no existe un botón ni una llamada pública que lo active.
 
 **¿Por qué los archivos sí son reales?** La especificación lo exige, pero están
@@ -48,7 +48,7 @@ manejador de Windows. Solo es válido mientras el archivo permanece abierto.
 un temporal dentro de la raíz y luego se reemplaza el destino, para no dejar el
 archivo original parcialmente escrito ante un fallo.
 
-**¿Qué es FILE_009?** Es una decisión aprobada para informar errores físicos o de
+**¿Qué es FILE_009?** Es el código que informa errores físicos o de
 codificación del almacenamiento que el catálogo original no definía. Conserva datos
 diagnósticos y no simula éxito.
 

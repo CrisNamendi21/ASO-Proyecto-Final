@@ -1,64 +1,70 @@
-# Registro de evidencias
+# Evidencias de funcionamiento
 
-## Ejecución automatizada
+## Entorno y resultados
 
-El 29 de septiembre de 2026 se ejecutó:
+Verificación del 11 de octubre de 2026 en Windows, con Python 3.13.15 y Tk 8.6.
+
+| Comprobación | Resultado |
+| --- | --- |
+| Compilación de fuentes y pruebas | Sin errores. |
+| Suite de unittest | 58 casos: 56 correctos, 2 omitidos, ningún fallo. |
+| Demostración | 16 solicitudes, códigos esperados y exactamente 16 eventos. |
+| Verificación de entrega | Código de salida 0 y `ENTREGA VERIFICADA`. |
+
+Comandos utilizados desde la raíz:
 
 ```powershell
+python -m compileall -q main.py demo.py verificar_entrega.py crear_paquete.py simulador tests
 python -m unittest discover -s tests -v
 python demo.py
-python -m compileall -q main.py demo.py simulador tests
+python verificar_entrega.py
 ```
 
-Resultado de pruebas: **58 ejecutadas, 56 correctas y 2 omitidas**. Las omisiones
-corresponden únicamente a los casos de symlink: Windows devolvió `WinError 1314`
-porque el entorno no otorgó privilegio para crearlos. La cobertura de hard links,
-traversal, rutas absolutas, separadores, modos, descriptores, fallos físicos,
-persistencia y bitácora se ejecutó correctamente.
+La matriz CP, CA y CE se relaciona con las pruebas en
+[MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md). Las pruebas de archivos y la demostración
+usan directorios temporales; no modifican los archivos persistentes de la aplicación.
 
-`demo.py` verificó 16 solicitudes públicas y la existencia de exactamente un evento
-de bitácora por solicitud. La demostración usa un directorio temporal, por lo que no
-modifica los archivos persistentes de la interfaz.
+## Casos comprobados
 
-## Revisión visual manual
+Se verificaron creación, listado, consulta y finalización de procesos; límites de
+nombre y prioridad; PID secuenciales; transiciones internas y estado terminal.
 
-La revisión de la ventana “Simulador de System Calls — Incremento 4” se realizó el
-29 de septiembre de 2026 con una ventana de 1050×780 píxeles.
+Para archivos se comprobaron las siete operaciones, modos de acceso, apertura
+única, descriptores secuenciales, reemplazo completo, persistencia, nombres inválidos,
+rutas externas, hard links y revalidación del destino por descriptor. Las pruebas
+de fallos físicos comprueban errores controlados y conservación del original ante
+fallos de escritura o reemplazo.
 
-| Pantalla | Evidencia observada |
-| --- | --- |
-| Inicio | Encabezado, navegación, explicación de alcance y paneles inferiores visibles. |
-| Procesos | Campos, selector de prioridad, cuatro controles y tabla de cuatro columnas visibles. Se creó y listó `Evidencia` con PID 101 y estado Listo. |
-| Resultado y recorrido | La creación mostró `EXITO`, `PROC-01`, PID 101 y las etapas GUI → aplicación → interfaz → kernel → dispatcher → gestor → retorno. |
-| Archivos | Campos de nombre, modo y descriptor; controles Crear, Abrir, Leer, Escribir, Cerrar, Eliminar y Listar; área de contenido y tabla visibles sin recortes. |
-| Bitácora | Las filas `create_process` y `list_processes` mostraron evento, hora, llamada, estado y código. El panel de detalle permanece de solo lectura. |
+Las pruebas de integración comprueban el resultado y su evento. También verifican
+el recorrido por capas, el registro anterior al retorno, las copias de consulta y
+que la bitácora guarde cantidades sin copiar el contenido leído o escrito.
 
-La prueba de Tk también comprueba que las vistas solicitadas caben a 850×700. Las
-capturas visuales de esta revisión quedaron visibles durante la ejecución de la
-verificación; este registro conserva los hechos observados y una ruta reproducible
-para repetirlos mediante [MANUAL_USO.md](MANUAL_USO.md).
+## Comprobación de la interfaz
 
-## Limitación documentada
+La prueba `test_secuencia_visible_de_las_siete_operaciones` abrió una ventana Tk real,
+recorrió las cuatro vistas y comprobó sus dimensiones solicitadas. Ejecutó las siete
+operaciones de archivos desde los controladores de la GUI, verificó resultados,
+contenido y tabla, provocó `FILE_008` y comprobó nueve eventos en Bitácora. La ventana
+se cerró al terminar la prueba.
 
-Los dos casos de symlink deben repetirse en un Windows con privilegio de creación de
-enlaces simbólicos. No es un fallo funcional conocido: el código y los casos de
-seguridad están implementados, pero esa capacidad del anfitrión no estaba disponible.
+Esta comprobación es automatizada y no sustituye una revisión visual manual de
+legibilidad, distribución o recortes. Para comprobar esos aspectos, ejecutar
+`python main.py` y seguir el [manual de uso](MANUAL_USO.md). No se atribuye una nueva
+inspección visual manual a la ejecución de pruebas de esta fecha.
 
-## Cierre del incremento 6
+## Limitación de enlaces simbólicos
 
-`python verificar_entrega.py` comprobó en una sola ejecución los 12 archivos de
-entrega requeridos, Tkinter, compilación, 58 pruebas y la demostración de 16
-solicitudes. El resultado final fue `ENTREGA VERIFICADA`.
+Se omitieron estos dos casos porque Windows devolvió `WinError 1314` al intentar
+crear enlaces simbólicos:
 
-## Cierre del incremento 7
+- `test_enlaces_no_se_listan_abren_eliminan_ni_modifican_destino`.
+- `test_raiz_no_puede_ser_enlace_o_redireccion`.
 
-`crear_paquete.py` utiliza una lista explícita de los archivos entregables y crea
-un ZIP portable junto con su suma SHA-256. El ZIP excluye Git, cachés y el contenido
-personal de `datos/archivos/`; incluye esa carpeta vacía para que la aplicación quede
-lista para ejecutarse después de extraerla.
+Deben repetirse en un entorno con ese privilegio. Las omisiones no prueban el
+resultado de esos casos. Las pruebas de hard links sí se ejecutaron correctamente.
 
-El paquete final contiene 33 entradas: 32 archivos y el directorio vacío de datos.
-Se verificaron su SHA-256, la ausencia de entradas duplicadas o prohibidas y la
-ausencia de archivos personales. Tras extraerlo en un directorio temporal, se
-ejecutó `python verificar_entrega.py`: terminó con código 0 y mostró
-`ENTREGA VERIFICADA`.
+## Reproducción desde el paquete
+
+Generar el ZIP con `python crear_paquete.py`, extraerlo en una carpeta vacía y
+ejecutar allí `python verificar_entrega.py`. El contenido previsto y la comprobación
+de integridad se describen en [MANIFIESTO_ENTREGA.md](MANIFIESTO_ENTREGA.md).

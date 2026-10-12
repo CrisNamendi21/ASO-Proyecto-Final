@@ -1,7 +1,7 @@
 # Matriz de pruebas y trazabilidad
 
-Esta matriz consolida los casos definidos en la especificación técnica §13 y en
-`AGENTS.md`. No añade requisitos. Todos los casos de integración entran por
+Esta matriz relaciona los casos de la especificación técnica §13 y las comprobaciones
+adicionales de implementación con sus pruebas. Los casos de integración entran por
 `AplicacionUsuario` y recorren interfaz, kernel, dispatcher, gestor y bitácora.
 
 ## Procesos — CP-01 a CP-04
@@ -41,7 +41,7 @@ Esta matriz consolida los casos definidos en la especificación técnica §13 y 
 | CE-10a | Llamada desconocida | `SYS_001` | `test_CE_10_llamada_desconocida` |
 | CE-10b | Parámetros incompletos | `SYS_002` | `test_CE_10_parametros_incompletos` |
 
-## Reglas adicionales obligatorias
+## Reglas e invariantes adicionales
 
 | Regla | Evidencia automatizada principal |
 | --- | --- |
@@ -54,24 +54,39 @@ Esta matriz consolida los casos definidos en la especificación técnica §13 y 
 | Fallos físicos `FILE_009` sin falso éxito | pruebas de raíz, lectura, codificación, temporal y reemplazo |
 | Contenido ausente de la bitácora | `test_bitacora_registra_cantidades_sin_contenido` |
 | Un evento final por solicitud | ayudantes de todas las pruebas de integración |
-| GUI de archivos y ausencia de recortes a 850×700 | `test_secuencia_visible_de_las_siete_operaciones` |
+| GUI de archivos, navegación y dimensiones de vistas | `test_secuencia_visible_de_las_siete_operaciones` |
 | Demostración pública completa | `python demo.py`, que valida códigos y cantidad de eventos |
+
+## Trazabilidad por componente
+
+| Fuente del diseño | Implementación | Pruebas |
+| --- | --- | --- |
+| §§6, 8.4 y 11.1: recorrido y registro antes del retorno | Aplicación, interfaz, kernel y dispatcher | `test_integracion.py`, `test_procesos.py` |
+| §8.1: respuesta uniforme | `contratos.py` y gestores | Ayudantes de integración de CP, CA y CE |
+| §§8.2 y 9: procesos y transiciones | `procesos.py` | `test_integracion.py`, `test_procesos.py` |
+| §§8.3 y 10: operaciones, modos, descriptores y persistencia | `archivos.py` | `test_archivos.py` |
+| §10.14: confinamiento | Validación de nombres, raíz y destinos | Casos de rutas, enlaces y revalidación por descriptor |
+| §§6.8, 8.3 y 13.4: bitácora | `kernel.py`, `bitacora.py` | Integración y registro de cantidades sin contenido |
+| §12: interfaz | `gui/ventana.py` | `test_gui_archivos.py` y recorrido manual del manual de uso |
+| §13.1: errores de dominio y solicitud | `errores.py`, dispatcher y gestores | CE-01–CE-10 |
+| Detalles de implementación | [Notas técnicas](DECISIONES.md) | Casos de espacios, copias, parámetros extra y `FILE_009` |
 
 ## Evidencia de ejecución
 
-Comandos utilizados el 29 de septiembre de 2026:
+El 11 de octubre de 2026 se ejecutaron:
 
 ```powershell
 python -m unittest discover -s tests -v
 python demo.py
-python -m compileall -q main.py demo.py simulador tests
+python -m compileall -q main.py demo.py verificar_entrega.py crear_paquete.py simulador tests
+python verificar_entrega.py
 ```
 
-La ejecución consolidada se registra en el README. Las pruebas que crean archivos
-usan directorios temporales inyectados. Las pruebas de symlink pueden omitirse si
-Windows no concede el privilegio para crearlos; la omisión y su motivo aparecen en
-la salida real de `unittest`.
+Resultado: **58 casos, 56 correctos y 2 omitidos**, sin fallos. Las omisiones
+corresponden a los dos casos de symlink: Windows devolvió `WinError 1314` al
+intentar crearlos. La prueba de hard link y las demás pruebas de confinamiento
+se ejecutaron correctamente. Los archivos de prueba usan directorios temporales.
 
-Resultado del incremento 4: **58 pruebas ejecutadas, 56 correctas y 2 omitidas** por
-`WinError 1314` al intentar crear los dos symlinks. La prueba de hard link y todas
-las demás pruebas de confinamiento sí se ejecutaron correctamente.
+La demostración comprobó 16 solicitudes y 16 eventos. El verificador terminó con
+`ENTREGA VERIFICADA`. Los límites de estas comprobaciones están en
+[EVIDENCIAS.md](EVIDENCIAS.md).

@@ -2,11 +2,10 @@
 
 ## Requisitos y arranque
 
-Se necesita Python 3 con Tkinter. Desde PowerShell, dentro de la carpeta del
+Se necesita Python 3.10 o posterior con Tkinter. Desde PowerShell, dentro de la carpeta del
 proyecto:
 
 ```powershell
-cd "C:\Users\Cristopher\Desktop\ASO"
 python main.py
 ```
 
@@ -72,5 +71,5 @@ automatizadas.
 - Ejecutar las pruebas y confirmar que no haya fallos.
 - Ejecutar `python demo.py` y comprobar que imprime los 16 eventos esperados.
 - Realizar el recorrido manual anterior.
-- Consultar [MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md) y [DECISIONES.md](DECISIONES.md)
+- Consultar [MATRIZ_PRUEBAS.md](MATRIZ_PRUEBAS.md) y [notas técnicas](DECISIONES.md)
   antes de la defensa.

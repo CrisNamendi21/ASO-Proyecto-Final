@@ -1,48 +1,52 @@
-# Manifiesto del paquete de entrega — incremento 7
+# Manifiesto del paquete de entrega
 
-El paquete portable se genera desde la raíz del proyecto con:
+Desde la raíz del proyecto:
 
 ```powershell
 python crear_paquete.py
 ```
 
-El resultado se guarda en `dist/ASO_Incremento_7.zip`, acompañado por
-`dist/ASO_Incremento_7.sha256` para comprobar su integridad. El generador utiliza
-una lista cerrada de contenidos: si falta un archivo requerido, termina con error
-en lugar de producir una entrega incompleta.
+Se generan `dist/ASO_Proyecto_Final.zip` y `dist/ASO_Proyecto_Final.sha256`.
+La suma SHA-256 permite comprobar la integridad del ZIP. El generador usa una lista
+explícita de archivos y termina con error si falta alguno de ellos.
 
-## Contenido incluido
+## Contenido
 
-- Código de arranque, demostración y verificación.
-- Paquete `simulador/` y pruebas de `tests/`, únicamente como fuentes `.py`.
-- README, manual, matriz, decisiones, evidencias, guía de defensa e informe final.
-- `AGENTS.md` y los dos documentos fuente bajo `docs/`, sin modificarlos.
-- Una carpeta vacía `datos/archivos/`, preparada para los archivos que el usuario
-  cree al ejecutar la aplicación.
+- Arranque, demostración, verificador y generador del paquete.
+- Fuentes Python de `simulador/` y `tests/`.
+- README, manual, matriz de pruebas, notas técnicas, evidencias, guía de defensa,
+  informe final y este manifiesto.
+- Los dos documentos académicos originales bajo `docs/`.
+- `.gitignore`.
+- La carpeta vacía `datos/archivos/`.
 
-## Exclusiones deliberadas
+## Exclusiones
 
-- Historial y configuración interna de Git.
-- `__pycache__`, bytecode `.pyc` y otros archivos generados.
-- El propio directorio `dist/`.
-- Archivos existentes en `datos/archivos/`, porque pueden pertenecer a una sesión
-  personal o a una demostración anterior.
+Se excluyen las instrucciones internas de desarrollo, el historial de Git,
+`__pycache__`, archivos `.pyc`, el directorio `dist/` y todos los archivos existentes
+en `datos/archivos/`. Los datos locales permanecen en el proyecto original.
 
-Estas exclusiones no cambian el funcionamiento: los archivos físicos que se creen
-después de extraer el ZIP persistirán dentro de la nueva `datos/archivos/`.
+Los archivos que se creen al usar la copia extraída persistirán dentro de su propia
+carpeta `datos/archivos/`.
 
-## Comprobación después de extraer
+## Uso después de extraer
 
-Desde la raíz extraída:
+Se necesita Python con Tkinter y permiso de escritura en la carpeta extraída.
+El ZIP contiene código fuente, no un ejecutable independiente.
+
+Desde esa carpeta:
 
 ```powershell
 python verificar_entrega.py
 python main.py
 ```
 
-El primer comando valida archivos requeridos, Tkinter, compilación, pruebas y la
-demostración. El segundo abre la interfaz gráfica para repetir el recorrido manual.
+El primer comando comprueba archivos requeridos, Tkinter, compilación, pruebas y
+demostración. El segundo abre la interfaz para seguir el [manual](MANUAL_USO.md).
 
-Esto no está especificado en los documentos académicos; se incorpora como decisión
-de implementación para evitar omisiones y contaminación de la entrega final. No
-añade llamadas al sistema, capas, dependencias ni comportamiento funcional.
+Para comparar la suma del paquete con el valor del archivo `.sha256`:
+
+```powershell
+Get-FileHash -Algorithm SHA256 .\dist\ASO_Proyecto_Final.zip
+Get-Content .\dist\ASO_Proyecto_Final.sha256
+```

@@ -1,4 +1,4 @@
-"""Catálogo del diseño §13.1 y ampliación FILE_009 aprobada en DEC-002."""
+"""Errores del simulador, incluidos los fallos físicos de almacenamiento."""
 
 from .contratos import Resultado
 
