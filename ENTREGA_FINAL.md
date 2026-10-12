@@ -1,51 +1,49 @@
-# Informe de cierre — incremento 7
+# Estado de la entrega
 
-Fecha de verificación: 29 de septiembre de 2026.
+Verificación automatizada: 11 de octubre de 2026.
 
-Este informe contrasta el estado final con los criterios de aceptación de
-`AGENTS.md`. No sustituye la especificación técnica ni la propuesta académica.
+El simulador implementa las once llamadas de la especificación técnica. La
+compilación, las pruebas disponibles y la demostración terminan correctamente.
+Los detalles reproducibles se encuentran en [EVIDENCIAS.md](EVIDENCIAS.md).
 
-| Criterio de aceptación | Estado | Evidencia principal |
-| --- | --- | --- |
-| Python y Tkinter/ttk ejecutables | Cumple | `main.py`, prueba Tk real y `verificar_entrega.py` |
-| Exactamente 11 llamadas con firmas definidas | Cumple | registro explícito del dispatcher y prueba correspondiente |
-| Recorrido completo por todas las capas | Cumple | pruebas de integración, recorrido visible y demostración |
-| Reglas de procesos, PID y transiciones | Cumple | CP-01–CP-04 y pruebas de invariantes |
-| Reglas de archivos, modos y descriptores | Cumple | CA-01–CA-07 y pruebas adicionales |
-| Confinamiento y persistencia física | Cumple | traversal, rutas, hard links, temporales y reinicio de aperturas |
-| Errores exactos y ausencia de falsos éxitos | Cumple | CE-01–CE-10 y `FILE_009` aprobado |
-| Un evento final por cada solicitud | Cumple | ayudantes de integración y demostración de 16 eventos |
-| Matriz documental completa | Cumple | `MATRIZ_PRUEBAS.md` |
-| GUI, navegación, resultados y recorrido | Cumple | prueba Tk y revisión visual del incremento 5 |
-| Demostración académica reproducible | Cumple | `demo.py` y `MANUAL_USO.md` |
-| Manual, evidencias y defensa | Cumple | documentos finales del incremento 5 |
-| Sin fallos críticos conocidos | Cumple | 58 pruebas ejecutadas y demostración correcta |
+| Aspecto | Comprobación |
+| --- | --- |
+| Python y Tkinter | Python 3.13.15, Tk 8.6 y apertura de ventana durante la prueba de GUI. |
+| Once llamadas y arquitectura por capas | Registro del dispatcher y pruebas de integración del recorrido. |
+| Procesos, PID y transiciones | CP-01–CP-04, errores de procesos y pruebas de invariantes. |
+| Archivos, modos y descriptores | CA-01–CA-07 y pruebas de permisos, cierre y secuencias. |
+| Confinamiento y persistencia | Pruebas de rutas, nombres, hard links, destinos y reinicio de aperturas. |
+| Manejo de errores | CE-01–CE-10 y fallos de almacenamiento con `FILE_009`. |
+| Bitácora | Un evento por solicitud, copias de consulta y cantidades sin contenido de archivos. |
+| Interfaz | Prueba funcional con Tk real, navegación y operaciones de archivos. |
+| Programa de demostración | 16 solicitudes y 16 eventos con resultados comprobados. |
+| Documentación | README, manual, notas técnicas, matriz, evidencias y guía de defensa. |
 
-## Resultado verificable
-
-Ejecutar desde la raíz:
+## Verificación y paquete
 
 ```powershell
 python verificar_entrega.py
+python crear_paquete.py
 ```
 
-El comando comprueba los archivos requeridos, la disponibilidad de Tkinter, la
-compilación, la suite completa y la demostración. Devuelve código distinto de cero
-si alguna fase falla.
+El verificador terminó con código 0 y `ENTREGA VERIFICADA`: 58 casos de prueba,
+56 correctos y 2 omitidos. El generador produce `dist/ASO_Proyecto_Final.zip` y
+su suma SHA-256. El [manifiesto](MANIFIESTO_ENTREGA.md) describe su contenido y uso.
 
-La entrega portable se construye con `python crear_paquete.py`. Su lista cerrada de
-archivos y exclusiones está documentada en `MANIFIESTO_ENTREGA.md`; el ZIP se entrega
-con una suma SHA-256 para verificar que no cambió después de generarlo.
+## Límites de la verificación
 
-## Limitación del entorno
+Dos pruebas de enlaces simbólicos no pudieron ejecutarse por `WinError 1314`.
+Se requiere un entorno con permiso para crearlos antes de afirmar que esos dos
+casos están comprobados. Las pruebas de hard links sí finalizaron correctamente.
 
-Dos pruebas de symlink se omiten porque Windows devuelve `WinError 1314` al intentar
-crear esos enlaces sin privilegio. La implementación rechaza symlinks y junctions;
-las pruebas deben repetirse en un entorno con ese permiso para obtener evidencia
-ejecutada de esos dos casos. La prueba de hard links sí se ejecuta correctamente.
+La prueba automatizada de la GUI no certifica una revisión visual manual. El
+[manual](MANUAL_USO.md) permite repetir la navegación, resultados, errores y cierre
+antes de la exposición.
 
-## Fuera de alcance, conforme al diseño
+## Alcance del simulador
 
-No se implementan procesos reales, scheduler, persistencia de procesos, base de
-datos, sandbox del anfitrión ni protección avanzada frente a modificaciones externas
-concurrentes. Estas exclusiones no son defectos pendientes.
+Los procesos, descriptores, aperturas y eventos duran una sesión. Los archivos físicos
+persisten dentro de `datos/archivos/`. No se implementan procesos reales, planificación
+del procesador, base de datos ni protección frente a modificaciones concurrentes de
+otros programas. La separación usuario/kernel representa el flujo de una solicitud,
+sin cambiar privilegios del procesador.

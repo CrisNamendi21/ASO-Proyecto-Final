@@ -85,7 +85,7 @@ class Ventana:
         self.mostrar("Inicio")
 
     def _configurar_estilos(self) -> None:
-        """Aplica una escala legible y uniforme sin alterar la lógica de la GUI."""
+        """Define los colores, fuentes y tamaños de los controles."""
         estilo = ttk.Style(self.raiz)
         if "clam" in estilo.theme_names():
             estilo.theme_use("clam")

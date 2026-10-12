@@ -1,4 +1,4 @@
-"""CA-01–CA-07, CE-04–CE-09 y reglas de archivos del incremento 3."""
+"""CA-01–CA-07, CE-04–CE-09 y reglas de archivos."""
 
 import errno
 import os

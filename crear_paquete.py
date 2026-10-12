@@ -8,12 +8,11 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 RAIZ = Path(__file__).resolve().parent
 DIRECTORIO_SALIDA = RAIZ / "dist"
-PAQUETE = DIRECTORIO_SALIDA / "ASO_Incremento_7.zip"
-ARCHIVO_HASH = DIRECTORIO_SALIDA / "ASO_Incremento_7.sha256"
+PAQUETE = DIRECTORIO_SALIDA / "ASO_Proyecto_Final.zip"
+ARCHIVO_HASH = DIRECTORIO_SALIDA / "ASO_Proyecto_Final.sha256"
 
 ARCHIVOS_REQUERIDOS = (
     ".gitignore",
-    "AGENTS.md",
     "main.py",
     "demo.py",
     "verificar_entrega.py",

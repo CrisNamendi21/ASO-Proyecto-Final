@@ -69,7 +69,7 @@ class GestorProcesos:
         if anterior == EstadoProceso.FINALIZADO:
             return error("PROC_003")
         self._cambiar_estado(pid, EstadoProceso.FINALIZADO)
-        # DEC-008: conservar ambos estados en resultado y evento final (§8.2).
+        # Ambos estados viajan en el resultado para registrarlos en la bitácora.
         return Resultado("EXITO", "PROC-04", "Proceso finalizado correctamente.",
                          {"pid": pid, "estado": EstadoProceso.FINALIZADO.value,
                           "estado_anterior": anterior.value})
@@ -84,7 +84,7 @@ class GestorProcesos:
                 "estado": proceso.estado.value, "prioridad": proceso.prioridad}
 
     def _cambiar_estado(self, pid: int, nuevo: EstadoProceso) -> None:
-        """Control interno (§9.4, DEC-001); nunca es una system call pública."""
+        """Valida las transiciones internas; no es una llamada pública."""
         if not self._pid_existente(pid):
             raise ValueError("PID inválido para una transición interna.")
         proceso = self._procesos[pid]
