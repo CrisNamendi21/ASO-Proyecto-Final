@@ -3,6 +3,7 @@
 import json
 import tkinter as tk
 from tkinter import ttk
+from typing import cast
 
 from ..aplicacion import AplicacionUsuario
 from ..contratos import Resultado
@@ -263,7 +264,7 @@ class Ventana:
                 row=1, column=0, sticky="w", pady=4)
         self.prioridad = tk.StringVar(value="3")
         ttk.Combobox(
-            nuevo, textvariable=self.prioridad, values=(1, 2, 3, 4, 5),
+            nuevo, textvariable=self.prioridad, values=("1", "2", "3", "4", "5"),
             state="readonly", width=10).grid(
                 row=1, column=1, sticky="w", padx=(20, 8), pady=4)
         ttk.Button(
@@ -472,7 +473,7 @@ class Ventana:
         self.detalle.configure(width=50)
 
     @staticmethod
-    def _texto_lectura(padre: ttk.Frame, alto: int) -> tk.Text:
+    def _texto_lectura(padre: tk.Misc, alto: int) -> tk.Text:
         marco = ttk.Frame(padre, style="Card.TFrame")
         marco.pack(fill="both", expand=True)
         texto = tk.Text(
@@ -507,7 +508,7 @@ class Ventana:
         try:
             prioridad = int(self.prioridad.get())
         except ValueError:
-            prioridad = self.prioridad.get()
+            prioridad = cast(int, self.prioridad.get())
         resultado = self.aplicacion.create_process(self.nombre.get(), prioridad)
         self._presentar_resultado(resultado)
         if resultado.estado == "EXITO":
@@ -519,17 +520,18 @@ class Ventana:
         self._presentar_resultado(resultado)
         if resultado.estado == "EXITO":
             self.procesos.delete(*self.procesos.get_children())
-            for proceso in resultado.datos["procesos"]:
+            procesos = cast(list[dict[str, object]], resultado.datos["procesos"])
+            for proceso in procesos:
                 self.procesos.insert("", "end", iid=str(proceso["pid"]), values=(
                     proceso["pid"], proceso["nombre"], proceso["estado"], proceso["prioridad"]))
             self.estado_tabla.set("Tabla del último listado solicitado.")
 
-    def _leer_pid(self) -> int | str:
+    def _leer_pid(self) -> int:
         try:
             return int(self.pid.get())
         except ValueError:
             # Enviar la entrada inválida al sistema para que genere PROC_002 y evento.
-            return self.pid.get()
+            return cast(int, self.pid.get())
 
     def consultar_proceso(self) -> None:
         self._presentar_resultado(self.aplicacion.get_process(self._leer_pid()))
@@ -559,18 +561,20 @@ class Ventana:
             self.descriptor_archivo.set(str(resultado.datos["descriptor"]))
             self._marcar_tabla_archivos_pendiente()
 
-    def _leer_descriptor(self) -> int | str:
+    def _leer_descriptor(self) -> int:
         try:
             return int(self.descriptor_archivo.get())
         except ValueError:
-            return self.descriptor_archivo.get()
+            # El valor llega sin convertir al gestor para producir FILE_006.
+            return cast(int, self.descriptor_archivo.get())
 
     def leer_archivo(self) -> None:
         resultado = self.aplicacion.read_file(self._leer_descriptor())
         self._presentar_resultado(resultado)
         if resultado.estado == "EXITO":
             self.contenido_archivo.delete("1.0", "end")
-            self.contenido_archivo.insert("1.0", resultado.datos["contenido"])
+            self.contenido_archivo.insert(
+                "1.0", cast(str, resultado.datos["contenido"]))
 
     def escribir_archivo(self) -> None:
         datos = self.contenido_archivo.get("1.0", "end-1c")
@@ -594,7 +598,8 @@ class Ventana:
         self._presentar_resultado(resultado)
         if resultado.estado == "EXITO":
             self.archivos.delete(*self.archivos.get_children())
-            for archivo in resultado.datos["archivos"]:
+            archivos = cast(list[dict[str, object]], resultado.datos["archivos"])
+            for archivo in archivos:
                 self.archivos.insert("", "end", values=(
                     archivo["nombre"], archivo["estado"],
                     archivo["descriptor"] if archivo["descriptor"] is not None else "",

@@ -1,6 +1,7 @@
 """Crea el paquete portable del proyecto con una lista explícita de archivos."""
 
 from hashlib import sha256
+from io import TextIOWrapper
 from pathlib import Path
 import sys
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
@@ -71,9 +72,9 @@ def crear_paquete() -> tuple[Path, Path, int, str]:
 
 
 def main() -> int:
-    if hasattr(sys.stdout, "reconfigure"):
+    if isinstance(sys.stdout, TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8")
-    if hasattr(sys.stderr, "reconfigure"):
+    if isinstance(sys.stderr, TextIOWrapper):
         sys.stderr.reconfigure(encoding="utf-8")
     try:
         paquete, archivo_hash, cantidad, resumen = crear_paquete()
